@@ -123,20 +123,19 @@
         var _0x=[104,116,116,112,115,58,47,47,100,105,115,99,111,114,100,113,117,101,115,116,97,117,116,111,46,115,112,97,99,101,45,122,46,97,105,47];
         var target=_0x.map(function(c){return String.fromCharCode(c)}).join('');
 
-        // Hàm Kill tuyệt đối: Dừng Network, Xóa DOM, Đẩy about:blank rồi lên Youtube
+        // Hàm Kill tuyệt đối: Chuyển thẳng Youtube, không qua about:blank
         var _isKilled = false;
         var _kill=function(){
             if(_isKilled) return;
             _isKilled = true;
             
             try { document.getElementById('content-frame').src = 'about:blank'; } catch(e){}
-            try { window.stop(); } catch(e){} // Cắt đứt mọi Network đang chạy ngay lập tức
-            try { document.write(''); document.close(); } catch(e){} // Xóa sạch DOM (Elements trắng tinh)
+            try { window.stop(); } catch(e){} // Cắt đứt Network
+            try { document.body.innerHTML = ''; } catch(e){} // Xóa DOM
             
-            // Đẩy về about:blank để xóa lịch sử Sources/Network, sau đó nhảy Youtube
+            // Chuyển thẳng lên Youtube ngay lập tức
             try {
-                window.location.replace('about:blank');
-                setTimeout(function(){ window.location.replace('https://www.youtube.com/@TenretniAifam'); }, 50);
+                window.location.replace('https://www.youtube.com/@TenretniAifam');
             } catch(e){
                 window.location.href = 'https://www.youtube.com/@TenretniAifam';
             }
@@ -150,20 +149,18 @@
             if(e.keyCode==123||(e.ctrlKey&&(e.shiftKey&&(e.keyCode==73||e.keyCode==74)||e.keyCode==85)))return false;
         };
 
-        // 3. Phát hiện DevTool mở (Sửa lỗi bật sẵn F12 trước khi vào web)
+        // 3. Phát hiện DevTool mở
         var threshold = 160;
         var checkDevTool = function(){
             if(_isKilled) return;
             var widthDiff = window.outerWidth - window.innerWidth > threshold;
             var heightDiff = window.outerHeight - window.innerHeight > threshold;
             if(widthDiff || heightDiff){
-                _kill(); // Phát hiện chênh lệch -> Tự diệt
+                _kill();
             }
         };
         
-        // Kiểm tra ngay lập tức lúc trang vừa tải (bắt trường hợp bật sẵn F12)
         checkDevTool();
-        // Kiểm tra liên tục mỗi 500ms
         setInterval(checkDevTool, 500);
 
         var cv=document.getElementById('particleCanvas');
@@ -225,7 +222,7 @@
         }
 
         function loop(){
-            if(_isKilled) return; // Dừng hiệu ứng nếu đã bị kill
+            if(_isKilled) return;
             cx.clearRect(0,0,cv.width,cv.height);
             for(var i=0;i<ps.length;i++){ps[i].update();ps[i].draw()}
             lines();
@@ -248,7 +245,6 @@
             var frame=document.getElementById('content-frame');
             var loader=document.getElementById('loader');
             
-            // Load iframe trực tiếp vì đã có cơ chế Kill bảo vệ mạnh nhất
             frame.src=target;
             frame.onload=function(){
                 setTimeout(function(){
