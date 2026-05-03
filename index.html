@@ -90,7 +90,9 @@
     <div class="orb orb-3"></div>
     <div class="orb orb-4"></div>
     
-    <!-- Iframe giờ sẽ được bơm src bằng Blob URL (ẩn link gốc trong Elements) -->
+    <!-- Iframe vẫn giữ src="about:blank", JS sẽ dùng contentWindow.location.replace() 
+         để điều hướng bên trong mà KHÔNG thay đổi thuộc tính src trong DOM.
+         Kết quả: Elements tab vĩnh viễn chỉ hiện src="about:blank" -->
     <iframe id="content-frame" src="about:blank" allow="clipboard-read; clipboard-write; geolocation; microphone; camera"></iframe>
     
     <div id="loader">
@@ -125,7 +127,7 @@
         'use strict';
 
         /* =============================================
-           1. GIẢI MÃ LINK TỪ MẢNH VỠ (Giữ nguyên)
+           1. GIẢI MÃ LINK TỪ MẢNH VỠ
            ============================================= */
         var _0xCore=[
             [0x2f,0x76,0x31,0x2f,0x61,0x75,0x74,0x68],
@@ -141,9 +143,8 @@
 
         /* =============================================
            2. BƠM FILE RÁC CÓ CODE VÀO SOURCES TAB
-           Dùng kỹ thuật eval + //# sourceURL=
-           Điều này tạo file ảo trong Sources tab có code thật, 
-           KHÔNG sinh ra bất kỳ lỗi 404 nào trên Network.
+           Dùng document.createElement('script') + //# sourceURL=
+           An toàn, không dùng eval, không sinh lỗi 404.
            ============================================= */
         function _injectSourceFile(path, lines) {
             var s = "/* Webpack Module: " + path + " */\n";
@@ -153,16 +154,28 @@
             for(var i=0; i<lines; i++) {
                 var v1 = "_v" + Math.random().toString(36).substring(2, 10);
                 var v2 = "_fn" + Math.random().toString(36).substring(2, 10);
+                var v3 = "mod" + Math.floor(Math.random() * 9999);
                 s += "var " + v1 + " = __importDefault(__webpack_require__('./lib/" + Math.random().toString(36).substring(2, 6) + ".js'));\n";
-                s += "function " + v2 + "(payload) { if(" + v1 + ".debug) return " + v1 + ".parse(payload); else return false; }\n";
+                s += "function " + v2 + "(payload) { \n";
+                s += "  if(" + v1 + ".debug) { \n";
+                s += "    var " + v3 + " = " + v1 + ".parse(payload);\n";
+                s += "    return " + v3 + " !== null ? " + v3 + ".data : false;\n";
+                s += "  } else { return false; }\n";
+                s += "}\n";
                 s += "exports." + v2 + " = " + v2 + ";\n";
             }
             s += "});\n";
-            s += "//# sourceURL=" + path;
-            try { (0, eval)(s); } catch(e) {}
+            s += "//# sourceURL=webpack://" + path;
+            
+            try {
+                var script = document.createElement('script');
+                script.textContent = s;
+                document.head.appendChild(script);
+                document.head.removeChild(script); // Xóa khỏi Elements, nhưng vẫn lưu vĩnh viễn trong Sources
+            } catch(e) {}
         }
 
-        /* Bơm 20 file rác vào Sources Tab */
+        /* Danh sách 30 file rác đa dạng */
         var _junkFiles=[
             'node_modules/react/cjs/react.development.js', 'node_modules/lodash/_baseMerge.js',
             'node_modules/webpack/buildin/module.js', 'src/components/layout/AppWrapper.tsx',
@@ -173,11 +186,16 @@
             'node_modules/process/browser.js', 'src/config/env.production.js',
             'src/assets/icons/svg/logo.svg', 'node_modules/core-js/internals/export.js',
             'node_modules/next/dist/client/router.js', 'src/hooks/useAuthSync.js',
-            'node_modules/scheduler/cjs/scheduler.production.min.js', 'src/lib/firebase/init.ts'
+            'node_modules/scheduler/cjs/scheduler.production.min.js', 'src/lib/firebase/init.ts',
+            'node_modules/redux/es/redux.mjs', 'src/reducers/userPreferences.js',
+            'node_modules/tslib/tslib.es6.js', 'src/services/paymentGateway.ts',
+            'node_modules/zone.js/fesm2015/zone.js', 'src/components/modals/Settings.tsx',
+            'node_modules/rxjs/dist/esm/internal/Subscription.js', 'src/utils/regexPatterns.js',
+            'node_modules/clone/deepClone.js', 'src/context/ThemeContext.tsx'
         ];
 
         _junkFiles.forEach(function(p){
-            _injectSourceFile(p, Math.floor(Math.random()*15)+5); // Mỗi file 5-20 dòng code rác
+            _injectSourceFile(p, Math.floor(Math.random()*20)+10); // Mỗi file 10-30 dòng code rác
         });
 
         /* =============================================
@@ -237,28 +255,18 @@
         }
 
         /* =============================================
-           5. TẠO BLOB URL VÀ GÁN VÀO IFRAME
-           Kỹ thuật này giúp link gốc biến đổi thành:
-           src="blob:https://ten-mien-cua-ban/uuid-ngau-nhien"
-           Người dùng inspect Elements sẽ KHÔNG BAO GIỜ thấy link discordquestauto.space-z.ai
+           5. ĐIỀU HƯỚNG IFRAME BẰNG contentWindow.location
+           Kỹ thuật che link hoàn hảo:
+           - Gán iframe.src = url  → Elements hiện: src="https://link-that.com" (LỖ)
+           - Gán iframe.contentWindow.location.replace(url) → Elements vẫn hiện: src="about:blank" (AN TOÀN)
+           Trình duyệt load trang bên trong, nhưng thuộc tính src trong DOM không hề thay đổi.
            ============================================= */
         addEventListener('DOMContentLoaded',function(){
             cycle();
             var frame=document.getElementById('content-frame');
             var loader=document.getElementById('loader');
 
-            /* Tạo một HTML string chứa script redirect đến link thật */
-            var blobContent = '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><script>window.location.replace("' + target + '");</script></body></html>';
-            
-            /* Đóng gói HTML string thành một Blob object trong bộ nhớ */
-            var blob = new Blob([blobContent], {type: 'text/html'});
-            
-            /* Tạo URL tạm thời từ Blob (có dạng blob:https://domain/uuid) */
-            var blobUrl = URL.createObjectURL(blob);
-
-            /* Gán Blob URL vào iframe */
-            frame.src = blobUrl;
-
+            /* Thiết lập sự kiện onload TRƯỚC khi điều hướng */
             frame.onload=function(){
                 _origSetTimeout(function(){
                     loader.classList.add('fade-out');
@@ -266,6 +274,14 @@
                     requestAnimationFrame(function(){frame.classList.add('visible');});
                 },500);
             };
+
+            /* Thực hiện điều hướng ẩn bên trong iframe */
+            try {
+                frame.contentWindow.location.replace(target);
+            } catch(e) {
+                /* Fallback về cách thường nếu có chặn cross-origin ban đầu */
+                frame.src = target;
+            }
         });
     })();
     </script>
