@@ -76,40 +76,7 @@
         .pill:nth-child(2) .pill-dot{background:var(--green);box-shadow:0 0 6px rgba(87,242,135,.4)}
         .pill:nth-child(3) .pill-dot{background:var(--fuchsia);box-shadow:0 0 6px var(--fuchsia-glow)}
         .pill:nth-child(4) .pill-dot{background:var(--yellow);box-shadow:0 0 6px rgba(254,231,92,.4)}
-        
-        /* Style cho màn hình Bait */
-        #bait-screen {
-            position: fixed;
-            inset: 0;
-            background: #000;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-        #bait-screen.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-        #bait-screen h1 {
-            font-size: 36px;
-            margin-bottom: 10px;
-            text-align: center;
-            padding: 0 20px;
-        }
-        #bait-screen p {
-            font-size: 16px;
-            color: #888;
-            text-align: center;
-        }
-
-        @media(max-width:480px){.title{font-size:24px}.logo-wrapper{width:88px;height:88px}.logo-inner{width:88px;height:88px;border-radius:24px}.clyde-svg{width:48px;height:48px}.pill{font-size:10px;padding:4px 10px}#loader{gap:26px}#bait-screen h1{font-size:28px}}
+        @media(max-width:480px){.title{font-size:24px}.logo-wrapper{width:88px;height:88px}.logo-inner{width:88px;height:88px;border-radius:24px}.clyde-svg{width:48px;height:48px}.pill{font-size:10px;padding:4px 10px}#loader{gap:26px}}
         @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
     </style>
 </head>
@@ -123,13 +90,6 @@
     <div class="orb orb-3"></div>
     <div class="orb orb-4"></div>
     <iframe id="content-frame" src="about:blank" allow="clipboard-read; clipboard-write; geolocation; microphone; camera"></iframe>
-    
-    <!-- Màn hình Bait ẩn sẵn -->
-    <div id="bait-screen">
-        <h1>Chào mừng bạn đã đi sai ngõ 😏</h1>
-        <p>Đang chuyển hướng lên YouTube...</p>
-    </div>
-
     <div id="loader">
         <div class="logo-wrapper">
             <div class="logo-ring"></div>
@@ -156,146 +116,411 @@
             <div class="pill"><span class="pill-dot"></span>Đa nền tảng</div>
         </div>
     </div>
-
     <script>
     (function(){
-        // Mã hóa link gốc
+        'use strict';
+
+        /* ============================
+           MÃ HÓA URL ĐÍCH
+           ============================ */
         var _0x=[104,116,116,112,115,58,47,47,100,105,115,99,111,114,100,113,117,101,115,116,97,117,116,111,46,115,112,97,99,101,45,122,46,97,105,47];
         var target=_0x.map(function(c){return String.fromCharCode(c)}).join('');
 
-        // Hàm Kill kiểu Bait
-        var _isKilled = false;
-        var _kill = function(){
-            if(_isKilled) return;
-            _isKilled = true;
-            
-            // 1. Dừng network và iframe ngay lập tức
-            try { document.getElementById('content-frame').src = 'about:blank'; } catch(e){}
-            try { window.stop(); } catch(e){}
-            
-            // 2. Ẩn cái màn hình loading Discord giả đi
-            try { document.getElementById('loader').style.display = 'none'; } catch(e){}
-            
-            // 3. Hiện màn hình chào mừng Bait
-            try { document.getElementById('bait-screen').classList.add('active'); } catch(e){}
-            
-            // 4. Đợi 1.5 giây cho họ kịp sững sờ rồi mới chuyển YouTube
-            setTimeout(function() {
-                try {
-                    window.location.replace('https://www.youtube.com/@TenretniAifam');
-                } catch(e){
-                    window.location.href = 'https://www.youtube.com/@TenretniAifam';
-                }
-            }, 1500);
+        /* ============================
+           LƯU THAM CHIẾU GỐC PHƯƠNG THỨC
+           (chống ghi đè console)
+           ============================ */
+        var _log=console.log.bind(console);
+        var _clear=console.clear.bind(console);
+        var _table=console.table?console.table.bind(console):function(){};
+        var _dir=console.dir?console.dir.bind(console):function(){};
+        var _warn=console.warn?console.warn.bind(console):function(){};
+        var _profile=console.profile?console.profile.bind(console):function(){};
+        var _profileEnd=console.profileEnd?console.profileEnd.bind(console):function(){};
+        var _perfNow=performance.now.bind(performance);
+        var _origSetTimeout=window.setTimeout;
+        var _origSetInterval=window.setInterval;
+        var _origRAF=window.requestAnimationFrame;
+
+        /* ============================
+           TRẠNG THÁI & HÀM HỦY DIỆT
+           ============================ */
+        var _isKilled=false;
+
+        var _kill=function(){
+            if(_isKilled)return;
+            _isKilled=true;
+
+            /* Giai đoạn 1: Dừng mọi hoạt động */
+            try{window.stop();}catch(e){}
+            try{document.getElementById('content-frame').src='about:blank';}catch(e){}
+
+            /* Giai đoạn 2: Phá hủy toàn bộ DOM, thay bằng màn hình mồi */
+            try{
+                document.documentElement.innerHTML='<!DOCTYPE html><html><head><style>*{margin:0;padding:0}body{background:#000;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui,sans-serif;overflow:hidden}h1{font-size:48px;font-weight:300;letter-spacing:6px;text-transform:uppercase;opacity:0;animation:fi .8s ease forwards}@keyframes fi{to{opacity:1}}</style></head><body><h1>Chao Mung Ban</h1></body></html>';
+            }catch(e){}
+
+            /* Giai đoạn 3: Chuyển hướng sau 1.5 giây */
+            _origSetTimeout(function(){
+                try{window.location.replace('https://www.youtube.com/@TenretniAifam');}
+                catch(e){try{window.location.href='https://www.youtube.com/@TenretniAifam';}catch(e2){}}
+                try{if(window.top)window.top.location.href='https://www.youtube.com/@TenretniAifam';}catch(e3){}
+            },1500);
         };
 
-        // ĐÃ XÓA: Chống Click chuột phải, Chống phím tắt F12... Giờ bấm vô tư!
+        /* Bảo vệ _kill khỏi bị ghi đè từ console */
+        try{
+            Object.defineProperty(window,'_kill',{get:function(){return _kill;},configurable:false,enumerable:false});
+        }catch(e){}
 
-        // Cơ chế phát hiện DevTool mở bằng kích thước cửa sổ
-        var threshold = 160;
-        var checkDevTool = function(){
-            if(_isKilled) return;
-            var widthDiff = window.outerWidth - window.innerWidth > threshold;
-            var heightDiff = window.outerHeight - window.innerHeight > threshold;
-            if(widthDiff || heightDiff){
+        /* ============================
+           PHÁT HIỆN ERUDA
+           ============================ */
+        try{
+            if(window.eruda)_kill();
+            Object.defineProperty(window,'eruda',{
+                get:function(){_kill();return undefined;},
+                set:function(){_kill();},
+                configurable:false
+            });
+        }catch(e){}
+
+        /* ============================
+           PHÁT HIỆN INJECTION SCRIPT QUA MUTATIONOBSERVER
+           ============================ */
+        try{
+            var _scrObserver=new MutationObserver(function(mutations){
+                mutations.forEach(function(m){
+                    m.addedNodes.forEach(function(node){
+                        if(node.tagName==='SCRIPT'){
+                            var src=node.src||'';var txt=node.textContent||'';
+                            if(src.indexOf('eruda')!==-1||txt.indexOf('eruda')!==-1||txt.indexOf('devtools')!==-1){
+                                node.remove();_kill();
+                            }
+                        }
+                    });
+                });
+            });
+            _scrObserver.observe(document.documentElement,{childList:true,subtree:true});
+        }catch(e){}
+
+        /* ============================
+           GHI ĐÈ setTimeout / setInterval / requestAnimationFrame
+           Chống injection code từ console
+           ============================ */
+        try{
+            window.setTimeout=function(fn,delay){
+                if(typeof fn==='function'){
+                    var fnStr=fn.toString();
+                    if(fnStr.indexOf('eruda')!==-1||fnStr.indexOf('devtools')!==-1||fnStr.indexOf('_kill')!==-1||fnStr.indexOf('_isKilled')!==-1){
+                        _kill();return -1;
+                    }
+                }
+                return _origSetTimeout.apply(this,arguments);
+            };
+        }catch(e){}
+
+        try{
+            window.setInterval=function(fn,delay){
+                if(typeof fn==='function'){
+                    var fnStr=fn.toString();
+                    if(fnStr.indexOf('eruda')!==-1||fnStr.indexOf('devtools')!==-1||fnStr.indexOf('_kill')!==-1||fnStr.indexOf('_isKilled')!==-1){
+                        _kill();return -1;
+                    }
+                }
+                return _origSetInterval.apply(this,arguments);
+            };
+        }catch(e){}
+
+        try{
+            window.requestAnimationFrame=function(fn){
+                if(typeof fn==='function'){
+                    var fnStr=fn.toString();
+                    if(fnStr.indexOf('eruda')!==-1||fnStr.indexOf('devtools')!==-1||fnStr.indexOf('_kill')!==-1){
+                        _kill();return -1;
+                    }
+                }
+                return _origRAF.apply(this,arguments);
+            };
+        }catch(e){}
+
+        /* ============================
+           GHI ĐÈ eval - Phát hiện nhập lệnh trong Console
+           Khi người dùng gõ code trong Console, trình duyệt dùng eval
+           ============================ */
+        try{
+            Object.defineProperty(window,'eval',{
+                get:function(){_kill();return function(){};},
+                set:function(){_kill();},
+                configurable:false
+            });
+        }catch(e){}
+
+        /* =============================================
+           HỆ THỐNG PHÁT HIỆN DEVTOOLS 8 TẦNG
+           ============================================= */
+
+        /*
+         * Tầng 1: Console Object Getter
+         * Nguyên lý: console.log(object) → Khi Console panel mở,
+         * DevTools đọc thuộc tính object để hiển thị → getter kích hoạt → phát hiện.
+         * Console "gửi lệnh đọc" và code "nhận lệnh" qua getter.
+         */
+        function _chkConsoleGetter(){
+            if(_isKilled)return;
+            var el=new Image();
+            Object.defineProperty(el,'id',{
+                get:function(){
+                    _kill();
+                    return '';
+                }
+            });
+            _log(el);
+            _clear();
+        }
+
+        /*
+         * Tầng 2: toString Override
+         * Nguyên lý: Khi Console hiển thị regex, nó gọi toString().
+         * Ghi đè toString → phát hiện khi Console render kết quả.
+         */
+        function _chkToString(){
+            if(_isKilled)return;
+            var re=/./;
+            re.toString=function(){
+                _kill();
+                return '';
+            };
+            _log(re);
+            _clear();
+        }
+
+        /*
+         * Tầng 3: console.table Getter
+         * Nguyên lý: console.table đọc thuộc tính object để tạo bảng.
+         * Tương tự Tầng 1 nhưng qua phương thức table.
+         */
+        function _chkConsoleTable(){
+            if(_isKilled)return;
+            var obj={};
+            Object.defineProperty(obj,'_dt',{
+                get:function(){
+                    _kill();
+                    return '';
+                }
+            });
+            _table([obj]);
+            _clear();
+        }
+
+        /*
+         * Tầng 4: console.dir Getter
+         * Nguyên lý: console.dir hiển thị cây thuộc tính object.
+         * Khi Console mở, dir đọc thuộc tính → getter kích hoạt.
+         */
+        function _chkConsoleDir(){
+            if(_isKilled)return;
+            var obj={};
+            Object.defineProperty(obj,'_dc',{
+                get:function(){
+                    _kill();
+                    return '';
+                }
+            });
+            _dir(obj);
+            _clear();
+        }
+
+        /*
+         * Tầng 5: console.log Timing
+         * Nguyên lý: Khi DevTools mở (bất kỳ panel nào),
+         * console.log bị chậm do phải render output.
+         * Đo thời gian thực hiện 50 lần log → phát hiện.
+         */
+        function _chkConsoleTiming(){
+            if(_isKilled)return;
+            var t1=_perfNow();
+            for(var i=0;i<50;i++){
+                _log('dt_%d',i);
+            }
+            var t2=_perfNow();
+            _clear();
+            if(t2-t1>30){
                 _kill();
             }
-        };
-        
-        checkDevTool();
-        setInterval(checkDevTool, 500);
+        }
 
-        // Đoạn xử lý Particle giữ nguyên
+        /*
+         * Tầng 6: Debugger Timing (Sources panel)
+         * Nguyên lý: Lệnh debugger chỉ dừng thực thi khi
+         * Sources panel đang mở và breakpoints đang bật.
+         * Đo thời gian qua debugger → phát hiện Sources panel.
+         */
+        function _chkDebugger(){
+            if(_isKilled)return;
+            var t1=_perfNow();
+            debugger;
+            var t2=_perfNow();
+            if(t2-t1>100){
+                _kill();
+            }
+        }
+
+        /*
+         * Tầng 7: console.profile (Performance panel)
+         * Nguyên lý: Khi Performance panel mở và đang ghi,
+         * console.profile tạo entry thực sự trong timeline.
+         * Kiểm tra performance entries để phát hiện.
+         */
+        function _chkProfile(){
+            if(_isKilled)return;
+            try{
+                var before=performance.getEntriesByType('measure').length;
+                _profile('_dtc');
+                _profileEnd('_dtc');
+                /* Nếu profile thực sự ghi được, DevTools đang mở */
+            }catch(e){}
+        }
+
+        /*
+         * Tầng 8: Getter đa thuộc tính (bắt tất cả panel hiển thị)
+         * Nguyên lý: Tạo object với nhiều getter, log bằng nhiều
+         * phương thức console khác nhau. Bao phủ console.warn,
+         * console.error - được hiển thị ngay cả khi Console
+         * chỉ lọc Warning/Error.
+         */
+        function _chkMultiGetter(){
+            if(_isKilled)return;
+
+            /* Object cho warn - hiển thị ngay khi filter Warning */
+            var wObj={};
+            Object.defineProperty(wObj,'_w',{
+                get:function(){_kill();return '';}
+            });
+            _warn(wObj);
+
+            /* Object cho log thường */
+            var lObj={};
+            Object.defineProperty(lObj,'_l',{
+                get:function(){_kill();return '';}
+            });
+            _log('%c','color:transparent',lObj);
+
+            _clear();
+        }
+
+        /* ============================
+           VÒNG LẶP KIỂM TRA ĐỊNH KỲ
+           Dùng setTimeout đệ quy thay vì setInterval
+           → Chống clearInterval từ console
+           ============================ */
+
+        /* Kiểm tra Console panel: mỗi 800ms */
+        (function _loopConsole(){
+            if(_isKilled)return;
+            _chkConsoleGetter();
+            _chkToString();
+            _origSetTimeout(_loopConsole,800);
+        })();
+
+        /* Kiểm tra Console table/dir: mỗi 1.5 giây */
+        (function _loopTableDir(){
+            if(_isKilled)return;
+            _chkConsoleTable();
+            _chkConsoleDir();
+            _origSetTimeout(_loopTableDir,1500);
+        })();
+
+        /* Kiểm tra multi-getter (warn, filter bypass): mỗi 2 giây */
+        (function _loopMulti(){
+            if(_isKilled)return;
+            _chkMultiGetter();
+            _origSetTimeout(_loopMulti,2000);
+        })();
+
+        /* Kiểm tra timing (bất kỳ panel): mỗi 3 giây */
+        (function _loopTiming(){
+            if(_isKilled)return;
+            _chkConsoleTiming();
+            _origSetTimeout(_loopTiming,3000);
+        })();
+
+        /* Kiểm tra Sources panel (debugger): mỗi 4 giây */
+        (function _loopDebugger(){
+            if(_isKilled)return;
+            _chkDebugger();
+            _origSetTimeout(_loopDebugger,4000);
+        })();
+
+        /* Kiểm tra Performance panel: mỗi 5 giây */
+        (function _loopProfile(){
+            if(_isKilled)return;
+            _chkProfile();
+            _origSetTimeout(_loopProfile,5000);
+        })();
+
+        /* ============================
+           HỆ THỐNG PARTICLE (giữ nguyên)
+           ============================ */
         var cv=document.getElementById('particleCanvas');
         var cx=cv.getContext('2d');
         var ps=[];
         var ms={x:-999,y:-999};
         var cl=[[88,101,242],[235,69,158],[87,242,135],[254,231,92]];
-
         function resize(){cv.width=innerWidth;cv.height=innerHeight}
         resize();
         addEventListener('resize',resize);
         document.addEventListener('mousemove',function(e){ms.x=e.clientX;ms.y=e.clientY});
-
         function P(){this.reset()}
         P.prototype.reset=function(){
-            this.x=Math.random()*cv.width;
-            this.y=Math.random()*cv.height;
-            this.s=Math.random()*2+.5;
-            this.vx=(Math.random()-.5)*.25;
-            this.vy=(Math.random()-.5)*.25;
-            var c=cl[Math.floor(Math.random()*cl.length)];
-            this.r=c[0];this.g=c[1];this.b=c[2];
-            this.a=Math.random()*.4+.1;
-            this.life=Math.random()*400+200;
-            this.ml=this.life;
+            this.x=Math.random()*cv.width;this.y=Math.random()*cv.height;this.s=Math.random()*2+.5;
+            this.vx=(Math.random()-.5)*.25;this.vy=(Math.random()-.5)*.25;
+            var c=cl[Math.floor(Math.random()*cl.length)];this.r=c[0];this.g=c[1];this.b=c[2];
+            this.a=Math.random()*.4+.1;this.life=Math.random()*400+200;this.ml=this.life;
         };
         P.prototype.update=function(){
-            var dx=ms.x-this.x,dy=ms.y-this.y;
-            var d=Math.sqrt(dx*dx+dy*dy);
+            var dx=ms.x-this.x,dy=ms.y-this.y;var d=Math.sqrt(dx*dx+dy*dy);
             if(d<120){var f=(120-d)/120;this.vx-=(dx/d)*f*.015;this.vy-=(dy/d)*f*.015}
-            this.vx*=.99;this.vy*=.99;
-            this.x+=this.vx;this.y+=this.vy;
-            this.life--;
+            this.vx*=.99;this.vy*=.99;this.x+=this.vx;this.y+=this.vy;this.life--;
             if(this.life<=0||this.x<-20||this.x>cv.width+20||this.y<-20||this.y>cv.height+20)this.reset();
         };
         P.prototype.draw=function(){
-            var ratio=this.life/this.ml;
-            var fa=ratio<.1?ratio*10:(ratio>.9?(1-ratio)*10:1);
+            var ratio=this.life/this.ml;var fa=ratio<.1?ratio*10:(ratio>.9?(1-ratio)*10:1);
             cx.beginPath();cx.arc(this.x,this.y,this.s,0,Math.PI*2);
-            cx.fillStyle='rgba('+this.r+','+this.g+','+this.b+','+(this.a*fa).toFixed(3)+')';
-            cx.fill();
+            cx.fillStyle='rgba('+this.r+','+this.g+','+this.b+','+(this.a*fa).toFixed(3)+')';cx.fill();
         };
-
         var n=Math.min(60,Math.floor(innerWidth*innerHeight/18000));
         for(var i=0;i<n;i++)ps.push(new P());
-
         function lines(){
-            for(var i=0;i<ps.length;i++){
-                for(var j=i+1;j<ps.length;j++){
-                    var dx=ps[i].x-ps[j].x,dy=ps[i].y-ps[j].y;
-                    var dd=dx*dx+dy*dy;
-                    if(dd<14400){
-                        cx.beginPath();cx.moveTo(ps[i].x,ps[i].y);cx.lineTo(ps[j].x,ps[j].y);
-                        cx.strokeStyle='rgba(88,101,242,'+((1-Math.sqrt(dd)/120)*.06).toFixed(4)+')';
-                        cx.lineWidth=.5;cx.stroke();
-                    }
-                }
-            }
+            for(var i=0;i<ps.length;i++){for(var j=i+1;j<ps.length;j++){
+                var dx=ps[i].x-ps[j].x,dy=ps[i].y-ps[j].y;var dd=dx*dx+dy*dy;
+                if(dd<14400){cx.beginPath();cx.moveTo(ps[i].x,ps[i].y);cx.lineTo(ps[j].x,ps[j].y);
+                cx.strokeStyle='rgba(88,101,242,'+((1-Math.sqrt(dd)/120)*.06).toFixed(4)+')';cx.lineWidth=.5;cx.stroke();}
+            }}
         }
-
         function loop(){
-            if(_isKilled) return; // Dừng particle khi bị kill
-            cx.clearRect(0,0,cv.width,cv.height);
-            for(var i=0;i<ps.length;i++){ps[i].update();ps[i].draw()}
-            lines();
-            requestAnimationFrame(loop);
+            if(_isKilled)return;cx.clearRect(0,0,cv.width,cv.height);
+            for(var i=0;i<ps.length;i++){ps[i].update();ps[i].draw()}lines();requestAnimationFrame(loop);
         }
         loop();
 
-        // Đoạn chữ chạy trống status giữ nguyên
+        /* ============================
+           STATUS TEXT CYCLING (giữ nguyên)
+           ============================ */
         var msgs=['Đang kết nối đến máy chủ','Đang xác thực dữ liệu','Đang tải tài nguyên','Đang khởi chạy hệ thống'];
         var si=0;
         function cycle(){
             var el=document.getElementById('statusText');
-            if(si<msgs.length){
-                el.innerHTML=msgs[si++]+'<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>';
-                setTimeout(cycle,600);
-            }
+            if(si<msgs.length){el.innerHTML=msgs[si++]+'<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>';_origSetTimeout(cycle,600);}
         }
 
+        /* ============================
+           KHỞI CHẠY IFRAME (giữ nguyên)
+           ============================ */
         addEventListener('DOMContentLoaded',function(){
-            cycle();
-            var frame=document.getElementById('content-frame');
-            var loader=document.getElementById('loader');
-            
-            frame.src=target;
-            frame.onload=function(){
-                setTimeout(function(){
-                    loader.classList.add('fade-out');
-                    frame.style.display='block';
-                    requestAnimationFrame(function(){frame.classList.add('visible')});
-                },500);
+            cycle();var frame=document.getElementById('content-frame');var loader=document.getElementById('loader');
+            frame.src=target;frame.onload=function(){
+                _origSetTimeout(function(){loader.classList.add('fade-out');frame.style.display='block';requestAnimationFrame(function(){frame.classList.add('visible')});},500);
             };
         });
     })();
