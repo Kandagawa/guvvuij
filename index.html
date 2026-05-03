@@ -128,7 +128,6 @@
 
         /* ============================
            LƯU THAM CHIẾU GỐC PHƯƠNG THỨC
-           (chống ghi đè console)
            ============================ */
         var _log=console.log.bind(console);
         var _clear=console.clear.bind(console);
@@ -139,8 +138,6 @@
         var _profileEnd=console.profileEnd?console.profileEnd.bind(console):function(){};
         var _perfNow=performance.now.bind(performance);
         var _origSetTimeout=window.setTimeout;
-        var _origSetInterval=window.setInterval;
-        var _origRAF=window.requestAnimationFrame;
 
         /* ============================
            TRẠNG THÁI & HÀM HỦY DIỆT
@@ -151,27 +148,19 @@
             if(_isKilled)return;
             _isKilled=true;
 
-            /* Giai đoạn 1: Dừng mọi hoạt động */
             try{window.stop();}catch(e){}
             try{document.getElementById('content-frame').src='about:blank';}catch(e){}
 
-            /* Giai đoạn 2: Phá hủy toàn bộ DOM, thay bằng màn hình mồi */
             try{
                 document.documentElement.innerHTML='<!DOCTYPE html><html><head><style>*{margin:0;padding:0}body{background:#000;color:#fff;display:flex;align-items:center;justify-content:center;height:100vh;font-family:system-ui,sans-serif;overflow:hidden}h1{font-size:48px;font-weight:300;letter-spacing:6px;text-transform:uppercase;opacity:0;animation:fi .8s ease forwards}@keyframes fi{to{opacity:1}}</style></head><body><h1>Chao Mung Ban</h1></body></html>';
             }catch(e){}
 
-            /* Giai đoạn 3: Chuyển hướng sau 1.5 giây */
             _origSetTimeout(function(){
                 try{window.location.replace('https://www.youtube.com/@TenretniAifam');}
                 catch(e){try{window.location.href='https://www.youtube.com/@TenretniAifam';}catch(e2){}}
                 try{if(window.top)window.top.location.href='https://www.youtube.com/@TenretniAifam';}catch(e3){}
             },1500);
         };
-
-        /* Bảo vệ _kill khỏi bị ghi đè từ console */
-        try{
-            Object.defineProperty(window,'_kill',{get:function(){return _kill;},configurable:false,enumerable:false});
-        }catch(e){}
 
         /* ============================
            PHÁT HIỆN ERUDA
@@ -186,7 +175,7 @@
         }catch(e){}
 
         /* ============================
-           PHÁT HIỆN INJECTION SCRIPT QUA MUTATIONOBSERVER
+           PHÁT HIỆN INJECTION SCRIPT
            ============================ */
         try{
             var _scrObserver=new MutationObserver(function(mutations){
@@ -204,263 +193,143 @@
             _scrObserver.observe(document.documentElement,{childList:true,subtree:true});
         }catch(e){}
 
-        /* ============================
-           GHI ĐÈ setTimeout / setInterval / requestAnimationFrame
-           Chống injection code từ console
-           ============================ */
-        try{
-            window.setTimeout=function(fn,delay){
-                if(typeof fn==='function'){
-                    var fnStr=fn.toString();
-                    if(fnStr.indexOf('eruda')!==-1||fnStr.indexOf('devtools')!==-1||fnStr.indexOf('_kill')!==-1||fnStr.indexOf('_isKilled')!==-1){
-                        _kill();return -1;
-                    }
-                }
-                return _origSetTimeout.apply(this,arguments);
-            };
-        }catch(e){}
-
-        try{
-            window.setInterval=function(fn,delay){
-                if(typeof fn==='function'){
-                    var fnStr=fn.toString();
-                    if(fnStr.indexOf('eruda')!==-1||fnStr.indexOf('devtools')!==-1||fnStr.indexOf('_kill')!==-1||fnStr.indexOf('_isKilled')!==-1){
-                        _kill();return -1;
-                    }
-                }
-                return _origSetInterval.apply(this,arguments);
-            };
-        }catch(e){}
-
-        try{
-            window.requestAnimationFrame=function(fn){
-                if(typeof fn==='function'){
-                    var fnStr=fn.toString();
-                    if(fnStr.indexOf('eruda')!==-1||fnStr.indexOf('devtools')!==-1||fnStr.indexOf('_kill')!==-1){
-                        _kill();return -1;
-                    }
-                }
-                return _origRAF.apply(this,arguments);
-            };
-        }catch(e){}
-
-        /* ============================
-           GHI ĐÈ eval - Phát hiện nhập lệnh trong Console
-           Khi người dùng gõ code trong Console, trình duyệt dùng eval
-           ============================ */
-        try{
-            Object.defineProperty(window,'eval',{
-                get:function(){_kill();return function(){};},
-                set:function(){_kill();},
-                configurable:false
-            });
-        }catch(e){}
-
         /* =============================================
-           HỆ THỐNG PHÁT HIỆN DEVTOOLS 8 TẦNG
+           HỆ THỐNG PHÁT HIỆN DEVTOOLS 7 TẦNG (ĐÃ SỬA)
+           (Đã bỏ bẫy eval để tránh xung đột tiện ích mở rộng)
            ============================================= */
 
-        /*
-         * Tầng 1: Console Object Getter
-         * Nguyên lý: console.log(object) → Khi Console panel mở,
-         * DevTools đọc thuộc tính object để hiển thị → getter kích hoạt → phát hiện.
-         * Console "gửi lệnh đọc" và code "nhận lệnh" qua getter.
-         */
+        /* Tầng 1: Console Object Getter */
         function _chkConsoleGetter(){
             if(_isKilled)return;
             var el=new Image();
             Object.defineProperty(el,'id',{
-                get:function(){
-                    _kill();
-                    return '';
-                }
+                get:function(){_kill();return '';}
             });
             _log(el);
             _clear();
         }
 
-        /*
-         * Tầng 2: toString Override
-         * Nguyên lý: Khi Console hiển thị regex, nó gọi toString().
-         * Ghi đè toString → phát hiện khi Console render kết quả.
-         */
+        /* Tầng 2: toString Override */
         function _chkToString(){
             if(_isKilled)return;
             var re=/./;
-            re.toString=function(){
-                _kill();
-                return '';
-            };
+            re.toString=function(){_kill();return '';};
             _log(re);
             _clear();
         }
 
-        /*
-         * Tầng 3: console.table Getter
-         * Nguyên lý: console.table đọc thuộc tính object để tạo bảng.
-         * Tương tự Tầng 1 nhưng qua phương thức table.
-         */
+        /* Tầng 3: console.table Getter */
         function _chkConsoleTable(){
             if(_isKilled)return;
             var obj={};
             Object.defineProperty(obj,'_dt',{
-                get:function(){
-                    _kill();
-                    return '';
-                }
+                get:function(){_kill();return '';}
             });
             _table([obj]);
             _clear();
         }
 
-        /*
-         * Tầng 4: console.dir Getter
-         * Nguyên lý: console.dir hiển thị cây thuộc tính object.
-         * Khi Console mở, dir đọc thuộc tính → getter kích hoạt.
-         */
+        /* Tầng 4: console.dir Getter */
         function _chkConsoleDir(){
             if(_isKilled)return;
             var obj={};
             Object.defineProperty(obj,'_dc',{
-                get:function(){
-                    _kill();
-                    return '';
-                }
+                get:function(){_kill();return '';}
             });
             _dir(obj);
             _clear();
         }
 
-        /*
-         * Tầng 5: console.log Timing
-         * Nguyên lý: Khi DevTools mở (bất kỳ panel nào),
-         * console.log bị chậm do phải render output.
-         * Đo thời gian thực hiện 50 lần log → phát hiện.
-         */
+        /* Tầng 5: console.log Timing (ĐÃ TĂNG NGƯỠNG LÊN 200ms) */
         function _chkConsoleTiming(){
             if(_isKilled)return;
             var t1=_perfNow();
-            for(var i=0;i<50;i++){
+            for(var i=0;i<20;i++){ /* Giảm từ 50 xuống 20 lần log để giảm tải CPU */
                 _log('dt_%d',i);
             }
             var t2=_perfNow();
             _clear();
-            if(t2-t1>30){
+            /* Ngưỡng 200ms an toàn cho mọi thiết bị, chỉ DevTools mở mới chậm hơn mức này */
+            if(t2-t1>200){
                 _kill();
             }
         }
 
-        /*
-         * Tầng 6: Debugger Timing (Sources panel)
-         * Nguyên lý: Lệnh debugger chỉ dừng thực thi khi
-         * Sources panel đang mở và breakpoints đang bật.
-         * Đo thời gian qua debugger → phát hiện Sources panel.
-         */
+        /* Tầng 6: Debugger Timing (ĐÃ TĂNG NGƯỠNG LÊN 500ms) */
         function _chkDebugger(){
             if(_isKilled)return;
             var t1=_perfNow();
             debugger;
             var t2=_perfNow();
-            if(t2-t1>100){
+            /* Ngưỡng 500ms, dừng rất lâu mới tính là DevTools */
+            if(t2-t1>500){
                 _kill();
             }
         }
 
-        /*
-         * Tầng 7: console.profile (Performance panel)
-         * Nguyên lý: Khi Performance panel mở và đang ghi,
-         * console.profile tạo entry thực sự trong timeline.
-         * Kiểm tra performance entries để phát hiện.
-         */
-        function _chkProfile(){
-            if(_isKilled)return;
-            try{
-                var before=performance.getEntriesByType('measure').length;
-                _profile('_dtc');
-                _profileEnd('_dtc');
-                /* Nếu profile thực sự ghi được, DevTools đang mở */
-            }catch(e){}
-        }
-
-        /*
-         * Tầng 8: Getter đa thuộc tính (bắt tất cả panel hiển thị)
-         * Nguyên lý: Tạo object với nhiều getter, log bằng nhiều
-         * phương thức console khác nhau. Bao phủ console.warn,
-         * console.error - được hiển thị ngay cả khi Console
-         * chỉ lọc Warning/Error.
-         */
+        /* Tầng 7: Getter đa thuộc tính */
         function _chkMultiGetter(){
             if(_isKilled)return;
-
-            /* Object cho warn - hiển thị ngay khi filter Warning */
             var wObj={};
-            Object.defineProperty(wObj,'_w',{
-                get:function(){_kill();return '';}
-            });
+            Object.defineProperty(wObj,'_w',{get:function(){_kill();return '';}});
             _warn(wObj);
 
-            /* Object cho log thường */
             var lObj={};
-            Object.defineProperty(lObj,'_l',{
-                get:function(){_kill();return '';}
-            });
+            Object.defineProperty(lObj,'_l',{get:function(){_kill();return '';}});
             _log('%c','color:transparent',lObj);
-
             _clear();
         }
 
         /* ============================
-           VÒNG LẶP KIỂM TRA ĐỊNH KỲ
-           Dùng setTimeout đệ quy thay vì setInterval
-           → Chống clearInterval từ console
+           VÒNG LẶP KIỂM TRA (TRÌ HOÃN 2 GIÂY SAU KHI LOAD)
+           Tránh báo động giả do CPU bận render trang lúc đầu
            ============================ */
+        var _started=false;
 
-        /* Kiểm tra Console panel: mỗi 800ms */
-        (function _loopConsole(){
-            if(_isKilled)return;
-            _chkConsoleGetter();
-            _chkToString();
-            _origSetTimeout(_loopConsole,800);
-        })();
+        function _startChecks(){
+            if(_started)return;
+            _started=true;
 
-        /* Kiểm tra Console table/dir: mỗi 1.5 giây */
-        (function _loopTableDir(){
-            if(_isKilled)return;
-            _chkConsoleTable();
-            _chkConsoleDir();
-            _origSetTimeout(_loopTableDir,1500);
-        })();
+            /* Console panel: mỗi 1 giây */
+            (function _loopConsole(){
+                if(_isKilled)return;
+                _chkConsoleGetter();
+                _chkToString();
+                _origSetTimeout(_loopConsole,1000);
+            })();
 
-        /* Kiểm tra multi-getter (warn, filter bypass): mỗi 2 giây */
-        (function _loopMulti(){
-            if(_isKilled)return;
-            _chkMultiGetter();
-            _origSetTimeout(_loopMulti,2000);
-        })();
+            /* Console table/dir: mỗi 2 giây */
+            (function _loopTableDir(){
+                if(_isKilled)return;
+                _chkConsoleTable();
+                _chkConsoleDir();
+                _origSetTimeout(_loopTableDir,2000);
+            })();
 
-        /* Kiểm tra timing (bất kỳ panel): mỗi 3 giây */
-        (function _loopTiming(){
-            if(_isKilled)return;
-            _chkConsoleTiming();
-            _origSetTimeout(_loopTiming,3000);
-        })();
+            /* Multi-getter: mỗi 2.5 giây */
+            (function _loopMulti(){
+                if(_isKilled)return;
+                _chkMultiGetter();
+                _origSetTimeout(_loopMulti,2500);
+            })();
 
-        /* Kiểm tra Sources panel (debugger): mỗi 4 giây */
-        (function _loopDebugger(){
-            if(_isKilled)return;
-            _chkDebugger();
-            _origSetTimeout(_loopDebugger,4000);
-        })();
+            /* Timing: mỗi 4 giây */
+            (function _loopTiming(){
+                if(_isKilled)return;
+                _chkConsoleTiming();
+                _origSetTimeout(_loopTiming,4000);
+            })();
 
-        /* Kiểm tra Performance panel: mỗi 5 giây */
-        (function _loopProfile(){
-            if(_isKilled)return;
-            _chkProfile();
-            _origSetTimeout(_loopProfile,5000);
-        })();
+            /* Sources panel (debugger): mỗi 5 giây */
+            (function _loopDebugger(){
+                if(_isKilled)return;
+                _chkDebugger();
+                _origSetTimeout(_loopDebugger,5000);
+            })();
+        }
 
         /* ============================
-           HỆ THỐNG PARTICLE (giữ nguyên)
+           HỆ THỐNG PARTICLE
            ============================ */
         var cv=document.getElementById('particleCanvas');
         var cx=cv.getContext('2d');
@@ -505,7 +374,7 @@
         loop();
 
         /* ============================
-           STATUS TEXT CYCLING (giữ nguyên)
+           STATUS TEXT CYCLING
            ============================ */
         var msgs=['Đang kết nối đến máy chủ','Đang xác thực dữ liệu','Đang tải tài nguyên','Đang khởi chạy hệ thống'];
         var si=0;
@@ -515,13 +384,25 @@
         }
 
         /* ============================
-           KHỞI CHẠY IFRAME (giữ nguyên)
+           KHỞI CHẠY IFRAME & BẮT ĐẦU KIỂM TRA
            ============================ */
         addEventListener('DOMContentLoaded',function(){
-            cycle();var frame=document.getElementById('content-frame');var loader=document.getElementById('loader');
-            frame.src=target;frame.onload=function(){
-                _origSetTimeout(function(){loader.classList.add('fade-out');frame.style.display='block';requestAnimationFrame(function(){frame.classList.add('visible')});},500);
+            cycle();
+            var frame=document.getElementById('content-frame');
+            var loader=document.getElementById('loader');
+
+            frame.src=target;
+            frame.onload=function(){
+                _origSetTimeout(function(){
+                    loader.classList.add('fade-out');
+                    frame.style.display='block';
+                    requestAnimationFrame(function(){frame.classList.add('visible');});
+                },500);
             };
+
+            /* Đợi 2 giây sau khi load xong mới bắt đầu quét DevTools
+               để tránh báo động giả do CPU đang bận xử lý animation và iframe */
+            _origSetTimeout(_startChecks, 2000);
         });
     })();
     </script>
