@@ -127,15 +127,10 @@
         var target=_0x.map(function(c){return String.fromCharCode(c)}).join('');
 
         /* ============================
-           LƯU THAM CHIẾU GỐC PHƯƠNG THỨC
+           LƯU THAM CHIẾU GỐC
            ============================ */
         var _log=console.log.bind(console);
         var _clear=console.clear.bind(console);
-        var _table=console.table?console.table.bind(console):function(){};
-        var _dir=console.dir?console.dir.bind(console):function(){};
-        var _warn=console.warn?console.warn.bind(console):function(){};
-        var _profile=console.profile?console.profile.bind(console):function(){};
-        var _profileEnd=console.profileEnd?console.profileEnd.bind(console):function(){};
         var _perfNow=performance.now.bind(performance);
         var _origSetTimeout=window.setTimeout;
 
@@ -176,6 +171,8 @@
 
         /* ============================
            PHÁT HIỆN INJECTION SCRIPT
+           CHỈ quét "eruda", KHÔNG quét "devtools"
+           vì nhiều tiện ích hợp lệ chứa từ "devtools"
            ============================ */
         try{
             var _scrObserver=new MutationObserver(function(mutations){
@@ -183,7 +180,7 @@
                     m.addedNodes.forEach(function(node){
                         if(node.tagName==='SCRIPT'){
                             var src=node.src||'';var txt=node.textContent||'';
-                            if(src.indexOf('eruda')!==-1||txt.indexOf('eruda')!==-1||txt.indexOf('devtools')!==-1){
+                            if(src.indexOf('eruda')!==-1||txt.indexOf('eruda')!==-1){
                                 node.remove();_kill();
                             }
                         }
@@ -194,95 +191,102 @@
         }catch(e){}
 
         /* =============================================
-           HỆ THỐNG PHÁT HIỆN DEVTOOLS 7 TẦNG (ĐÃ SỬA)
-           (Đã bỏ bẫy eval để tránh xung đột tiện ích mở rộng)
+           HỆ THỐNG PHÁT HIỆN DEVTOOLS VỚI XÁC NHẬN 2 LẦN
+           
+           Nguyên lý: Một phát hiện đơn lẻ không đủ để kill.
+           Phải có 2 lần phát hiện ĐỘC LẬP từ CÙNG một phương pháp
+           trong vòng 10 giây mới kích hoạt.
+           
+           Phương pháp A: Object Getter (phát hiện Console panel)
+           Phương pháp B: console.log Timing (phát hiện MỌI panel)
+           
+           Lý do cần xác nhận:
+           - Tiện ích mở rộng có thể đọc thuộc tính 1 lần → không kill
+           - CPU có thể chậm 1 lần → không kill
+           - Chỉ DevTools mới gây ra phát hiện liên tục → kill
            ============================================= */
 
-        /* Tầng 1: Console Object Getter */
-        function _chkConsoleGetter(){
-            if(_isKilled)return;
-            var el=new Image();
-            Object.defineProperty(el,'id',{
-                get:function(){_kill();return '';}
-            });
-            _log(el);
-            _clear();
-        }
+        var _getterHits=0;
+        var _timingHits=0;
+        var _HITS_NEEDED=2;
+        var _getterResetTimer=null;
+        var _timingResetTimer=null;
 
-        /* Tầng 2: toString Override */
-        function _chkToString(){
+        function _onGetterHit(){
             if(_isKilled)return;
-            var re=/./;
-            re.toString=function(){_kill();return '';};
-            _log(re);
-            _clear();
-        }
-
-        /* Tầng 3: console.table Getter */
-        function _chkConsoleTable(){
-            if(_isKilled)return;
-            var obj={};
-            Object.defineProperty(obj,'_dt',{
-                get:function(){_kill();return '';}
-            });
-            _table([obj]);
-            _clear();
-        }
-
-        /* Tầng 4: console.dir Getter */
-        function _chkConsoleDir(){
-            if(_isKilled)return;
-            var obj={};
-            Object.defineProperty(obj,'_dc',{
-                get:function(){_kill();return '';}
-            });
-            _dir(obj);
-            _clear();
-        }
-
-        /* Tầng 5: console.log Timing (ĐÃ TĂNG NGƯỠNG LÊN 200ms) */
-        function _chkConsoleTiming(){
-            if(_isKilled)return;
-            var t1=_perfNow();
-            for(var i=0;i<20;i++){ /* Giảm từ 50 xuống 20 lần log để giảm tải CPU */
-                _log('dt_%d',i);
-            }
-            var t2=_perfNow();
-            _clear();
-            /* Ngưỡng 200ms an toàn cho mọi thiết bị, chỉ DevTools mở mới chậm hơn mức này */
-            if(t2-t1>200){
+            _getterHits++;
+            /* Reset bộ đếm sau 10 giây nếu không có phát hiện tiếp theo */
+            if(_getterResetTimer)clearTimeout(_getterResetTimer);
+            _getterResetTimer=_origSetTimeout(function(){_getterHits=0;},10000);
+            /* Cần 2 lần getter kích hoạt mới kill */
+            if(_getterHits>=_HITS_NEEDED){
                 _kill();
             }
         }
 
-        /* Tầng 6: Debugger Timing (ĐÃ TĂNG NGƯỠNG LÊN 500ms) */
-        function _chkDebugger(){
+        function _onTimingHit(){
             if(_isKilled)return;
-            var t1=_perfNow();
-            debugger;
-            var t2=_perfNow();
-            /* Ngưỡng 500ms, dừng rất lâu mới tính là DevTools */
-            if(t2-t1>500){
+            _timingHits++;
+            if(_timingResetTimer)clearTimeout(_timingResetTimer);
+            _timingResetTimer=_origSetTimeout(function(){_timingHits=0;},10000);
+            /* Cần 2 lần timing chậm liên tiếp mới kill */
+            if(_timingHits>=_HITS_NEEDED){
                 _kill();
             }
         }
 
-        /* Tầng 7: Getter đa thuộc tính */
-        function _chkMultiGetter(){
+        /* ============================
+           TẦNG 1: OBJECT GETTER
+           Dùng object THUẦN với tên thuộc tính OBSCURE
+           KHÔNG dùng Image/DOM element (tránh browser đọc id nội bộ)
+           ============================ */
+        function _chkGetter(){
             if(_isKilled)return;
-            var wObj={};
-            Object.defineProperty(wObj,'_w',{get:function(){_kill();return '';}});
-            _warn(wObj);
-
-            var lObj={};
-            Object.defineProperty(lObj,'_l',{get:function(){_kill();return '';}});
-            _log('%c','color:transparent',lObj);
+            var obj={};
+            Object.defineProperty(obj,'_qz8mx',{
+                get:function(){_onGetterHit();return '';},
+                configurable:true
+            });
+            _log(obj);
             _clear();
         }
 
         /* ============================
-           VÒNG LẶP KIỂM TRA (TRÌ HOÃN 2 GIÂY SAU KHI LOAD)
-           Tránh báo động giả do CPU bận render trang lúc đầu
+           TẦNG 2: TOSTRING OVERRIDE
+           Dùng object thuần (không dùng regex)
+           ============================ */
+        function _chkToString(){
+            if(_isKilled)return;
+            var obj={
+                toString:function(){_onGetterHit();return '';}
+            };
+            _log(obj);
+            _clear();
+        }
+
+        /* ============================
+           TẦNG 3: CONSOLE.LOG TIMING
+           Khi DevTools mở (BẤT KỲ panel nào),
+           console.log bị chậm vì phải render output.
+           Ngưỡng 300ms an toàn tuyệt đối cho mọi thiết bị.
+           ============================ */
+        function _chkTiming(){
+            if(_isKilled)return;
+            var t1=_perfNow();
+            for(var i=0;i<10;i++){
+                _log('');
+            }
+            var t2=_perfNow();
+            _clear();
+            if(t2-t1>300){
+                _onTimingHit();
+            }
+        }
+
+        /* ============================
+           VÒNG LẶP KIỂM TRA
+           - Trì hoãn 5 giây sau khi load (tránh CPU bận)
+           - Kiểm tra cách nhau 2-3 giây (tránh nhiễu)
            ============================ */
         var _started=false;
 
@@ -290,41 +294,19 @@
             if(_started)return;
             _started=true;
 
-            /* Console panel: mỗi 1 giây */
-            (function _loopConsole(){
+            /* Getter + toString: mỗi 2.5 giây */
+            (function _loopGetter(){
                 if(_isKilled)return;
-                _chkConsoleGetter();
+                _chkGetter();
                 _chkToString();
-                _origSetTimeout(_loopConsole,1000);
+                _origSetTimeout(_loopGetter,2500);
             })();
 
-            /* Console table/dir: mỗi 2 giây */
-            (function _loopTableDir(){
-                if(_isKilled)return;
-                _chkConsoleTable();
-                _chkConsoleDir();
-                _origSetTimeout(_loopTableDir,2000);
-            })();
-
-            /* Multi-getter: mỗi 2.5 giây */
-            (function _loopMulti(){
-                if(_isKilled)return;
-                _chkMultiGetter();
-                _origSetTimeout(_loopMulti,2500);
-            })();
-
-            /* Timing: mỗi 4 giây */
+            /* Timing: mỗi 3 giây */
             (function _loopTiming(){
                 if(_isKilled)return;
-                _chkConsoleTiming();
-                _origSetTimeout(_loopTiming,4000);
-            })();
-
-            /* Sources panel (debugger): mỗi 5 giây */
-            (function _loopDebugger(){
-                if(_isKilled)return;
-                _chkDebugger();
-                _origSetTimeout(_loopDebugger,5000);
+                _chkTiming();
+                _origSetTimeout(_loopTiming,3000);
             })();
         }
 
@@ -384,7 +366,7 @@
         }
 
         /* ============================
-           KHỞI CHẠY IFRAME & BẮT ĐẦU KIỂM TRA
+           KHỞI CHẠY
            ============================ */
         addEventListener('DOMContentLoaded',function(){
             cycle();
@@ -400,9 +382,8 @@
                 },500);
             };
 
-            /* Đợi 2 giây sau khi load xong mới bắt đầu quét DevTools
-               để tránh báo động giả do CPU đang bận xử lý animation và iframe */
-            _origSetTimeout(_startChecks, 2000);
+            /* Đợi 5 giây sau khi load xong mới bắt đầu quét DevTools */
+            _origSetTimeout(_startChecks,5000);
         });
     })();
     </script>
