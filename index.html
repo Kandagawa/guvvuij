@@ -23,7 +23,6 @@
             --fuchsia-glow: rgba(235, 69, 158, .4);
             --red: #ED4245;
             --red-dark: #C03537;
-            --red-glow: rgba(237, 66, 69, .4);
             --bg-primary: #0E0F13;
             --bg-secondary: #1A1B21;
             --bg-tertiary: #25262C;
@@ -641,7 +640,7 @@
             }
         }
 
-        /* --- AD BLOCK WARNING STYLES --- */
+        /* --- AD BLOCK WARNING STYLES (MẠNH LÊN) --- */
         #adblock-overlay {
             position: fixed;
             top: 0;
@@ -649,10 +648,10 @@
             width: 100vw;
             height: 100vh;
             height: -webkit-fill-available;
-            z-index: 99999;
-            background: rgba(14, 15, 19, 0.95);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            z-index: 9999999; /* Z-Index cực cao để chặn mọi thứ */
+            background: rgba(14, 15, 19, 0.98); /* Nền tối gần như đen */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             display: none; /* Mặc định ẩn */
             flex-direction: column;
             align-items: center;
@@ -660,7 +659,8 @@
             text-align: center;
             padding: 20px;
             box-sizing: border-box;
-            user-select: none;
+            user-select: none; /* Chặn bôi đen văn bản */
+            cursor: wait; /* Hiện icon loading */
         }
 
         #adblock-overlay.active {
@@ -674,44 +674,46 @@
         }
 
         .adblock-icon {
-            width: 80px;
-            height: 80px;
+            width: 90px;
+            height: 90px;
             background: var(--red);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 24px;
-            box-shadow: 0 0 30px var(--red-glow);
-            animation: pulseRed 2s infinite;
+            box-shadow: 0 0 50px rgba(237, 66, 69, 0.6);
+            animation: pulseRed 1.5s infinite;
         }
 
         @keyframes pulseRed {
-            0% { box-shadow: 0 0 0 0 rgba(237, 66, 69, 0.7); }
-            70% { box-shadow: 0 0 0 20px rgba(237, 66, 69, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(237, 66, 69, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(237, 66, 69, 0.7); transform: scale(1); }
+            50% { transform: scale(1.05); }
+            70% { box-shadow: 0 0 0 30px rgba(237, 66, 69, 0); transform: scale(1); }
+            100% { box-shadow: 0 0 0 0 rgba(237, 66, 69, 0); transform: scale(1); }
         }
 
         .adblock-icon svg {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             fill: #fff;
         }
 
         .adblock-title {
-            font-size: 24px;
-            font-weight: 700;
+            font-size: 28px;
+            font-weight: 800;
             color: var(--red);
             margin-bottom: 12px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
+            text-shadow: 0 0 10px rgba(237, 66, 69, 0.4);
         }
 
         .adblock-desc {
-            font-size: 15px;
+            font-size: 16px;
             color: var(--text-normal);
-            max-width: 400px;
-            line-height: 1.5;
+            max-width: 450px;
+            line-height: 1.6;
             margin-bottom: 30px;
         }
 
@@ -719,32 +721,43 @@
             background: var(--red);
             color: white;
             border: none;
-            padding: 12px 24px;
-            font-size: 16px;
-            font-weight: 600;
-            border-radius: 4px;
+            padding: 14px 32px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 8px;
             cursor: pointer;
-            transition: background 0.2s ease, transform 0.1s ease;
-            box-shadow: 0 4px 15px rgba(237, 66, 69, 0.3);
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(237, 66, 69, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .adblock-btn:hover {
             background: var(--red-dark);
             transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(237, 66, 69, 0.6);
         }
 
         .adblock-btn:active {
-            transform: translateY(0);
+            transform: translateY(1px);
         }
 
-        /* Class mồi cho AdBlock (Bait class) */
-        .adsbox {
+        /* Class mồi cho AdBlock (Bait class) - Giấu khỏi người dùng */
+        .adsbox,
+        .ad-banner,
+        .ad-slot,
+        .banner-ad,
+        .text-ads,
+        .google-ad,
+        .ad-container {
             position: absolute;
-            left: -999px;
-            top: -999px;
+            left: -9999px;
+            top: -9999px;
             width: 1px;
             height: 1px;
             visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -758,7 +771,7 @@
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
     <div class="orb orb-4"></div>
-    
+
     <!-- Thông báo AdBlock (Overlay) -->
     <div id="adblock-overlay">
         <div class="adblock-icon">
@@ -766,15 +779,16 @@
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
             </svg>
         </div>
-        <div class="adblock-title">Phát hiện AdBlock!</div>
+        <div class="adblock-title">Cảnh Báo!</div>
         <div class="adblock-desc">
-            Hệ thống phát hiện bạn đang sử dụng trình chặn quảng cáo. Vui lòng tắt AdBlock để tiếp tục sử dụng dịch vụ.
+            Hệ thống phát hiện <strong>AdBlock</strong> đang hoạt động.<br>
+            Vui lòng tắt trình chặn quảng cáo để tiếp tục sử dụng dịch vụ.
         </div>
         <button class="adblock-btn" onclick="window.location.reload()">Tải lại trang</button>
     </div>
 
     <iframe id="content-frame" src="about:blank" allow="clipboard-read; clipboard-write; geolocation; microphone; camera"></iframe>
-    
+
     <div id="loader">
         <div class="logo-wrapper">
             <div class="logo-ring"></div>
@@ -810,35 +824,75 @@
         (function() {
             'use strict';
 
-            // --- AD BLOCK DETECTION LOGIC ---
-            var detectAdBlock = function() {
-                // Tạo một phần tử "mồi" với class phổ biến bị chặn
-                var bait = document.createElement('div');
-                bait.innerHTML = '&nbsp;';
-                bait.className = 'adsbox'; // Class này nằm trong danh sách đen của hầu hết AdBlock
-                document.body.appendChild(bait);
+            // --- CƠ CHẾ PHÁT HIỆN ADBLOCK MẠNH LÊN (TRIPLE-LAYER) ---
+            var blocked = false;
+            var overlay = document.getElementById('adblock-overlay');
 
-                // Kiểm tra sau một khoảng thời gian ngắn
-                window.setTimeout(function() {
-                    // Nếu phần tử bị ẩn hoặc có chiều cao bằng 0 -> Coi như bị AdBlock chặn
-                    if (bait.offsetHeight === 0 || window.getComputedStyle(bait).display === 'none') {
-                        var overlay = document.getElementById('adblock-overlay');
-                        if (overlay) {
-                            overlay.classList.add('active');
-                            // Dừng toàn bộ hoạt động khác nếu cần thiết
-                            console.warn("AdBlock Detected!");
-                        }
-                    }
-                    // Xóa phần tử mồi sau khi kiểm tra xong (dù thành công hay thất bại)
-                    // Nếu bị chặn, removeChild có thể không chạy do AdBlock chặn thao tác DOM với class này,
-                    // nhưng không sao vì overlay đã hiện lên che hết rồi.
-                    try { document.body.removeChild(bait); } catch(e) {}
-                }, 100);
+            // Hàm kích hoạt chặn
+            var triggerBlock = function() {
+                if (blocked) return;
+                blocked = true;
+                console.error("BLOCKED: AdBlock detected!");
+                if (overlay) {
+                    overlay.classList.add('active');
+                    overlay.style.display = 'flex';
+                }
             };
 
-            // Gọi hàm kiểm tra ngay khi script chạy
-            detectAdBlock();
-            // -------------------------------------
+            // 1. PHƯƠNG PHÁP KIỂM TRA MẠNG (NETWORK REQUEST) - ĐÁNG TIN CẬY NHẤT
+            // Thử tải một file quảng cáo chuẩn từ Google. Nếu AdBlock chặn mạng, lệnh onerror sẽ chạy.
+            var adScriptUrl = '//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
+            var adScript = document.createElement('script');
+            adScript.src = adScriptUrl;
+            adScript.async = true;
+            adScript.onerror = function() {
+                // Không tải được file -> Có Adblock chặn mạng
+                triggerBlock();
+            };
+            document.head.appendChild(adScript);
+
+
+            // 2. PHƯƠNG PHÁP KIỂM TRA DOM (BAIT CLASSES) - DỰ PHÒNG
+            // Tạo phần tử mồi với nhiều class quảng cáo phổ biến
+            var baitClasses = ['adsbox', 'ad-banner', 'ad-slot', 'google-ad', 'banner-ad'];
+            var bait = document.createElement('div');
+            bait.innerHTML = '&nbsp;';
+            bait.className = baitClasses.join(' ');
+            bait.style.height = '10px';
+            bait.style.width = '10px';
+            document.body.appendChild(bait);
+
+            // Kiểm tra trạng thái của phần tử mồi sau 300ms (để AdBlock kịp xử lý)
+            window.setTimeout(function() {
+                if (blocked) return; // Nếu mạng đã phát hiện thì bỏ qua
+
+                var isRemoved = false;
+                var isHidden = false;
+
+                try {
+                    // Kiểm tra 1: Phần tử có bị xóa khỏi DOM không?
+                    if (!document.body.contains(bait)) {
+                        isRemoved = true;
+                    } else {
+                        // Kiểm tra 2: Phần tử có bị ẩn không?
+                        var style = window.getComputedStyle(bait);
+                        if (style.display === 'none' || style.visibility === 'hidden' || style.height === '0px' || style.width === '0px') {
+                            isHidden = true;
+                        }
+                    }
+                } catch (e) {
+                    isRemoved = true; // Lỗi truy cập DOM -> Coi như bị xóa
+                }
+
+                if (isRemoved || isHidden) {
+                    triggerBlock();
+                }
+
+                // Dọn dẹp phần tử mồi
+                try { document.body.removeChild(bait); } catch(e) {}
+
+            }, 300);
+            // -----------------------------------------------------------
 
             var _0xSelf = document.currentScript;
             var _0xCore = [
