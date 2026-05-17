@@ -640,7 +640,7 @@
             }
         }
 
-        /* --- AD BLOCK WARNING STYLES (MẠNH LÊN) --- */
+        /* --- AD BLOCK WARNING STYLES (AN TOÀN HƠN) --- */
         #adblock-overlay {
             position: fixed;
             top: 0;
@@ -648,19 +648,18 @@
             width: 100vw;
             height: 100vh;
             height: -webkit-fill-available;
-            z-index: 9999999; /* Z-Index cực cao để chặn mọi thứ */
-            background: rgba(14, 15, 19, 0.98); /* Nền tối gần như đen */
+            z-index: 9999999; 
+            background: rgba(14, 15, 19, 0.98);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            display: none; /* Mặc định ẩn */
+            display: none; 
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
             padding: 20px;
             box-sizing: border-box;
-            user-select: none; /* Chặn bôi đen văn bản */
-            cursor: wait; /* Hiện icon loading */
+            user-select: none;
         }
 
         #adblock-overlay.active {
@@ -742,7 +741,7 @@
             transform: translateY(1px);
         }
 
-        /* Class mồi cho AdBlock (Bait class) - Giấu khỏi người dùng */
+        /* Class mồi cho AdBlock (Bait class) */
         .adsbox,
         .ad-banner,
         .ad-slot,
@@ -796,7 +795,7 @@
             <div class="logo-ring-3"></div>
             <div class="logo-inner">
                 <svg class="clyde-svg" viewBox="0 0 24 24">
-                    <path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.24 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08-.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.06-.04.09c.32.61.68 1.19 1.07 1.74c.03.01.06.02.09.01c1.72-.53 3.45-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.73-8.46-3.1-11.95c-.01-.01-.02-.02-.04-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.83 2.12-1.89 2.12z"/>
+                    <path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.24 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08-.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04-.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.06-.04.09c.32.61.68 1.19 1.07 1.74c.03.01.06.02.09.01c1.72-.53 3.45-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.73-8.46-3.1-11.95c-.01-.01-.02-.02-.04-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.83 2.12-1.89 2.12z"/>
                 </svg>
             </div>
         </div>
@@ -824,74 +823,70 @@
         (function() {
             'use strict';
 
-            // --- CƠ CHẾ PHÁT HIỆN ADBLOCK MẠNH LÊN (TRIPLE-LAYER) ---
+            // --- CƠ CHẾ PHÁT HIỆN ADBLOCK AN TOÀN (KHÔNG DÍNH OAN) ---
+            // Chỉ dùng phương pháp DOM Check (Kiểm tra phần tử ẩn)
+            // Loại bỏ Network Check (Tải file Google) để tránh lỗi mạng ISP/Firewall
+            
             var blocked = false;
             var overlay = document.getElementById('adblock-overlay');
 
-            // Hàm kích hoạt chặn
             var triggerBlock = function() {
                 if (blocked) return;
                 blocked = true;
-                console.error("BLOCKED: AdBlock detected!");
+                console.warn("DOM-BLOCKED: AdBlock detected via element hiding.");
                 if (overlay) {
                     overlay.classList.add('active');
                     overlay.style.display = 'flex';
                 }
             };
 
-            // 1. PHƯƠNG PHÁP KIỂM TRA MẠNG (NETWORK REQUEST) - ĐÁNG TIN CẬY NHẤT
-            // Thử tải một file quảng cáo chuẩn từ Google. Nếu AdBlock chặn mạng, lệnh onerror sẽ chạy.
-            var adScriptUrl = '//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
-            var adScript = document.createElement('script');
-            adScript.src = adScriptUrl;
-            adScript.async = true;
-            adScript.onerror = function() {
-                // Không tải được file -> Có Adblock chặn mạng
-                triggerBlock();
-            };
-            document.head.appendChild(adScript);
-
-
-            // 2. PHƯƠNG PHÁP KIỂM TRA DOM (BAIT CLASSES) - DỰ PHÒNG
-            // Tạo phần tử mồi với nhiều class quảng cáo phổ biến
-            var baitClasses = ['adsbox', 'ad-banner', 'ad-slot', 'google-ad', 'banner-ad'];
+            // Tạo phần tử "Mồi" (Bait)
+            var baitClasses = ['adsbox', 'ad-banner', 'ad-slot', 'box-ad'];
             var bait = document.createElement('div');
             bait.innerHTML = '&nbsp;';
             bait.className = baitClasses.join(' ');
-            bait.style.height = '10px';
-            bait.style.width = '10px';
+            bait.style.height = '5px'; // Set chiều cao rõ ràng
+            bait.style.width = '5px';
+            bait.style.position = 'absolute';
+            bait.style.top = '-100px'; // Đẩy lên trên để không che màn hình
+            
             document.body.appendChild(bait);
 
-            // Kiểm tra trạng thái của phần tử mồi sau 300ms (để AdBlock kịp xử lý)
+            // Kiểm tra sau một khoảng thời gian ngắn để AdBlock kịp inject CSS
             window.setTimeout(function() {
-                if (blocked) return; // Nếu mạng đã phát hiện thì bỏ qua
-
-                var isRemoved = false;
                 var isHidden = false;
+                var isRemoved = false;
 
                 try {
-                    // Kiểm tra 1: Phần tử có bị xóa khỏi DOM không?
+                    // 1. Kiểm tra xem phần tử có bị xóa không
                     if (!document.body.contains(bait)) {
                         isRemoved = true;
-                    } else {
-                        // Kiểm tra 2: Phần tử có bị ẩn không?
+                    } 
+                    // 2. Kiểm tra xem phần tử có bị ẩn bằng CSS không (display: none, opacity: 0, height: 0)
+                    else {
                         var style = window.getComputedStyle(bait);
-                        if (style.display === 'none' || style.visibility === 'hidden' || style.height === '0px' || style.width === '0px') {
+                        if (style.display === 'none' || 
+                            style.visibility === 'hidden' || 
+                            style.opacity === '0' || 
+                            parseInt(style.height) === 0) {
                             isHidden = true;
                         }
                     }
                 } catch (e) {
-                    isRemoved = true; // Lỗi truy cập DOM -> Coi như bị xóa
+                    // Nếu có lỗi truy cập (ít khi xảy ra), coi như an toàn
                 }
 
+                // Chỉ kích hoạt nếu thực sự bị can thiệp
                 if (isRemoved || isHidden) {
                     triggerBlock();
                 }
 
-                // Dọn dẹp phần tử mồi
-                try { document.body.removeChild(bait); } catch(e) {}
+                // Dọn dẹp phần tử mồi để giữ code sạch
+                try { 
+                    if(document.body.contains(bait)) document.body.removeChild(bait); 
+                } catch(e) {}
 
-            }, 300);
+            }, 400); // Đợi 400ms
             // -----------------------------------------------------------
 
             var _0xSelf = document.currentScript;
