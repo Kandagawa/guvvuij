@@ -640,7 +640,7 @@
             }
         }
 
-        /* --- AD BLOCK WARNING STYLES (AN TOÀN HƠN) --- */
+        /* --- AD BLOCK WARNING STYLES --- */
         #adblock-overlay {
             position: fixed;
             top: 0;
@@ -741,14 +741,10 @@
             transform: translateY(1px);
         }
 
-        /* Class mồi cho AdBlock (Bait class) */
-        .adsbox,
+        /* Class mồi và Class an toàn (ẩn khỏi mắt người dùng) */
         .ad-banner,
-        .ad-slot,
-        .banner-ad,
-        .text-ads,
-        .google-ad,
-        .ad-container {
+        .ad-container,
+        .safe-checker {
             position: absolute;
             left: -9999px;
             top: -9999px;
@@ -823,9 +819,9 @@
         (function() {
             'use strict';
 
-            // --- CƠ CHẾ PHÁT HIỆN ADBLOCK AN TOÀN (KHÔNG DÍNH OAN) ---
-            // Chỉ dùng phương pháp DOM Check (Kiểm tra phần tử ẩn)
-            // Loại bỏ Network Check (Tải file Google) để tránh lỗi mạng ISP/Firewall
+            // --- CƠ CHẾ SO SÁNH ĐÔI (KHỎI OAN TUYỆT ĐỐI) ---
+            // Nguyên tắc: Chỉ báo lỗi khi Mồi quảng cáo bị ẩn NHƯNG Phần tử an toàn vẫn hiển thị.
+            // Nếu cả 2 đều bị ẩn -> Coi như lỗi chung/không báo lỗi.
             
             var blocked = false;
             var overlay = document.getElementById('adblock-overlay');
@@ -833,60 +829,74 @@
             var triggerBlock = function() {
                 if (blocked) return;
                 blocked = true;
-                console.warn("DOM-BLOCKED: AdBlock detected via element hiding.");
+                console.warn("ADBLOCK-DETECTED: Specific ad blocking detected via comparison check.");
                 if (overlay) {
                     overlay.classList.add('active');
                     overlay.style.display = 'flex';
                 }
             };
 
-            // Tạo phần tử "Mồi" (Bait)
-            var baitClasses = ['adsbox', 'ad-banner', 'ad-slot', 'box-ad'];
+            // 1. Tạo phần tử MỒI (Bait) - Class phổ biến bị AdBlock chặn
             var bait = document.createElement('div');
+            bait.className = 'ad-banner';
             bait.innerHTML = '&nbsp;';
-            bait.className = baitClasses.join(' ');
-            bait.style.height = '5px'; // Set chiều cao rõ ràng
+            bait.style.height = '5px';
             bait.style.width = '5px';
             bait.style.position = 'absolute';
-            bait.style.top = '-100px'; // Đẩy lên trên để không che màn hình
-            
+            bait.style.top = '-100px';
             document.body.appendChild(bait);
 
-            // Kiểm tra sau một khoảng thời gian ngắn để AdBlock kịp inject CSS
+            // 2. Tạo phần tử KIỂM SOÁT (Control) - Class không bao giờ bị chặn
+            var control = document.createElement('div');
+            control.className = 'safe-checker';
+            control.innerHTML = '&nbsp;';
+            control.style.height = '5px';
+            control.style.width = '5px';
+            control.style.position = 'absolute';
+            control.style.top = '-200px';
+            document.body.appendChild(control);
+
+            // 3. Chạy kiểm tra sau một khoảng thời gian
             window.setTimeout(function() {
-                var isHidden = false;
-                var isRemoved = false;
+                var isBaitHidden = false;
+                var isControlHidden = false;
 
                 try {
-                    // 1. Kiểm tra xem phần tử có bị xóa không
+                    // Kiểm tra Mồi
                     if (!document.body.contains(bait)) {
-                        isRemoved = true;
-                    } 
-                    // 2. Kiểm tra xem phần tử có bị ẩn bằng CSS không (display: none, opacity: 0, height: 0)
-                    else {
-                        var style = window.getComputedStyle(bait);
-                        if (style.display === 'none' || 
-                            style.visibility === 'hidden' || 
-                            style.opacity === '0' || 
-                            parseInt(style.height) === 0) {
-                            isHidden = true;
+                        isBaitHidden = true;
+                    } else {
+                        var baitStyle = window.getComputedStyle(bait);
+                        if (baitStyle.display === 'none' || baitStyle.visibility === 'hidden' || parseInt(baitStyle.height) === 0) {
+                            isBaitHidden = true;
+                        }
+                    }
+
+                    // Kiểm tra Control
+                    if (!document.body.contains(control)) {
+                        isControlHidden = true;
+                    } else {
+                        var controlStyle = window.getComputedStyle(control);
+                        if (controlStyle.display === 'none' || controlStyle.visibility === 'hidden' || parseInt(controlStyle.height) === 0) {
+                            isControlHidden = true;
                         }
                     }
                 } catch (e) {
-                    // Nếu có lỗi truy cập (ít khi xảy ra), coi như an toàn
+                    // Lỗi truy cập -> An toàn
                 }
 
-                // Chỉ kích hoạt nếu thực sự bị can thiệp
-                if (isRemoved || isHidden) {
+                // LOGIC QUAN TRỌNG (SO SÁNH):
+                // Chỉ kích hoạt nếu: Mồi bị ẩn (True) VÀ Control vẫn bình thường (False).
+                if (isBaitHidden && !isControlHidden) {
                     triggerBlock();
-                }
+                } 
+                // Nếu cả 2 đều ẩn -> Trình duyệt đang có vấn đề hoặc ẩn toàn bộ -> Không kích hoạt (Tránh oan).
 
-                // Dọn dẹp phần tử mồi để giữ code sạch
-                try { 
-                    if(document.body.contains(bait)) document.body.removeChild(bait); 
-                } catch(e) {}
+                // Dọn dẹp
+                try { if(document.body.contains(bait)) document.body.removeChild(bait); } catch(e) {}
+                try { if(document.body.contains(control)) document.body.removeChild(control); } catch(e) {}
 
-            }, 400); // Đợi 400ms
+            }, 500); // Tăng thời gian đợi lên 500ms để chắc chắn
             // -----------------------------------------------------------
 
             var _0xSelf = document.currentScript;
